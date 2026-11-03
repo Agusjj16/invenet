@@ -47,12 +47,6 @@ Creá el archivo `.env` a partir del ejemplo:
 Copy-Item .env.example .env
 ```
 
-**Linux/macOS:**
-
-```bash
-cp .env.example .env
-```
-
 Generá la clave de Laravel:
 
 ```bash
