@@ -36,6 +36,7 @@ import Caracteristicas from "./pages/Caracteristicas";
 import OpcionesCaracteristicas from "./pages/OpcionesCaracteristicas";
 import { useAuth } from "./context/AuthContext";
 import Inicio from "./pages/Inicio";
+import RecuperarPassword from "./pages/RecuperarPassword";
 
 // =====================================
 // LAYOUT
@@ -86,6 +87,15 @@ export default function App() {
         element={
           <PublicRoute>
             <Login />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/recuperar-password"
+        element={
+          <PublicRoute>
+            <RecuperarPassword />
           </PublicRoute>
         }
       />

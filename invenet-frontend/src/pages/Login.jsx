@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MonitorCog, Mail, Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -112,6 +113,15 @@ export default function Login() {
                   className="w-full rounded-lg border border-slate-300 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
+            </div>
+
+            <div className="text-right">
+              <Link
+                to="/recuperar-password"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
 
             {error && (

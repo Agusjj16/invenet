@@ -14,8 +14,26 @@ use App\Http\Controllers\Api\NotificacionController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\CategoriaCaracteristicaController;
 use App\Http\Controllers\Api\OpcionCaracteristicaController;
+use App\Http\Controllers\Api\PasswordRecoveryController;
 
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post(
+        '/password/solicitar-codigo',
+        [PasswordRecoveryController::class, 'solicitarCodigo']
+    );
+
+    Route::post(
+        '/password/verificar-codigo',
+        [PasswordRecoveryController::class, 'verificarCodigo']
+    );
+
+    Route::post(
+        '/password/restablecer',
+        [PasswordRecoveryController::class, 'restablecer']
+    );
+});
 
 Route::middleware([
     'auth:sanctum',
