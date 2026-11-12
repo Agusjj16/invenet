@@ -1,42 +1,74 @@
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { Link } from "react-router-dom";
 
 import {
+  AlertCircle,
   Archive,
   ArrowLeft,
-  Eye,
-  RefreshCw,
-  Search,
-  Monitor,
-  ClipboardList,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Info,
-  AlertCircle,
-  X,
   ExternalLink,
+  Eye,
+  Monitor,
+  RefreshCw,
+  Search,
+  X,
 } from "lucide-react";
 
 import { obtenerActivosDadosDeBaja } from "../services/activoService";
-import { useFeedback } from "../context/FeedbackContext";
 
 // =====================================================
-// CONFIGURACIÓN VISUAL
+// ESTILOS COMPARTIDOS
 // =====================================================
 
-const clasesBoton =
-  "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40";
+const botonSecundario =
+  "inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
 
 // =====================================================
-// FORMATEAR FECHA
+// COMPONENTE: BOTÓN DE PAGINACIÓN
+// =====================================================
+
+function BotonPaginacion({
+  children,
+  onClick,
+  disabled,
+  icono: Icono,
+  iconoDerecha = false,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      {!iconoDerecha && Icono && <Icono size={16} />}
+
+      {children}
+
+      {iconoDerecha && Icono && <Icono size={16} />}
+    </button>
+  );
+}
+
+// =====================================================
+// FUNCIÓN: FORMATEAR FECHA
 // =====================================================
 
 function formatearFecha(fecha) {
   if (!fecha) return "No disponible";
 
-  const partes = String(fecha).slice(0, 10).split("-");
+  const partes = String(fecha)
+    .slice(0, 10)
+    .split("-");
 
   if (partes.length !== 3) {
     return String(fecha);
@@ -52,22 +84,10 @@ function formatearFecha(fecha) {
 }
 
 // =====================================================
-// PÁGINA: ACTIVOS DADOS DE BAJA
+// PÁGINA PRINCIPAL
 // =====================================================
 
 export default function ActivosDadosDeBaja() {
-  // =====================================================
-  // FEEDBACK GLOBAL
-  // =====================================================
-
-  const { toast } = useFeedback();
-
-  // Se mantiene una referencia actualizada al Toast
-  // para no volver a ejecutar el efecto de carga cuando
-  // cambia el contexto global.
-  const toastRef = useRef(toast);
-  toastRef.current = toast;
-
   // =====================================================
   // ESTADOS
   // =====================================================
@@ -81,120 +101,82 @@ export default function ActivosDadosDeBaja() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  // Controla las solicitudes para evitar que una
-  // respuesta anterior sobrescriba datos más recientes.
-  const solicitudActual = useRef(0);
+  // =====================================================
+  // REFERENCIAS
+  // =====================================================
 
-  // Evita actualizaciones de estado después de desmontar
-  // el componente.
+  const solicitudActualRef = useRef(0);
   const montadoRef = useRef(false);
 
   // =====================================================
   // CARGAR ACTIVOS DADOS DE BAJA
   // =====================================================
 
-  const cargarActivos = useCallback(
-    async ({
-      mostrarExito = false,
-      mostrarError = true,
-    } = {}) => {
-      const solicitud = ++solicitudActual.current;
+  const cargarActivos = useCallback(async () => {
+    const solicitud = ++solicitudActualRef.current;
 
-      setCargando(true);
-      setError("");
+    setCargando(true);
+    setError("");
 
-      try {
-        const respuesta =
-          await obtenerActivosDadosDeBaja({
-            page: pagina,
-          });
+    try {
+      const respuesta =
+        await obtenerActivosDadosDeBaja({
+          page: pagina,
+        });
 
-        if (
-          !montadoRef.current ||
-          solicitud !== solicitudActual.current
-        ) {
-          return;
-        }
-
-        setActivos(respuesta.data ?? []);
-        setPaginacion(respuesta);
-
-        if (mostrarExito) {
-          toastRef.current.success(
-            "El listado de activos dados de baja se actualizó correctamente."
-          );
-        }
-      } catch (err) {
-        if (
-          !montadoRef.current ||
-          solicitud !== solicitudActual.current
-        ) {
-          return;
-        }
-
-        console.error(
-          "Error al cargar activos dados de baja:",
-          err
-        );
-
-        const mensaje =
-          err.response?.data?.message ||
-          "No se pudieron cargar los activos dados de baja.";
-
-        setError(mensaje);
-
-        // Se limpian los datos anteriores para no
-        // mostrar información desactualizada.
-        setActivos([]);
-        setPaginacion(null);
-
-        if (mostrarError) {
-          toastRef.current.error(mensaje);
-        }
-      } finally {
-        if (
-          montadoRef.current &&
-          solicitud === solicitudActual.current
-        ) {
-          setCargando(false);
-        }
+      if (
+        !montadoRef.current ||
+        solicitud !== solicitudActualRef.current
+      ) {
+        return;
       }
-    },
-    [pagina]
-  );
+
+      setActivos(respuesta.data ?? []);
+      setPaginacion(respuesta);
+    } catch (err) {
+      if (
+        !montadoRef.current ||
+        solicitud !== solicitudActualRef.current
+      ) {
+        return;
+      }
+
+      console.error(
+        "Error al cargar activos dados de baja:",
+        err
+      );
+
+      setError(
+        err.response?.data?.message ||
+          "No se pudieron cargar los activos dados de baja. Intentá nuevamente."
+      );
+
+      setActivos([]);
+      setPaginacion(null);
+    } finally {
+      if (
+        montadoRef.current &&
+        solicitud === solicitudActualRef.current
+      ) {
+        setCargando(false);
+      }
+    }
+  }, [pagina]);
 
   // =====================================================
-  // CARGA INICIAL Y CAMBIOS DE PÁGINA
+  // CARGA INICIAL Y CAMBIO DE PÁGINA
   // =====================================================
 
   useEffect(() => {
     montadoRef.current = true;
 
-    // La carga automática no muestra un Toast de éxito.
-    cargarActivos({
-      mostrarExito: false,
-      mostrarError: true,
-    });
+    cargarActivos();
 
     return () => {
       montadoRef.current = false;
-
-      // Invalida las solicitudes pendientes.
-      solicitudActual.current += 1;
+      solicitudActualRef.current += 1;
     };
   }, [cargarActivos]);
-
-  // =====================================================
-  // ACTUALIZACIÓN MANUAL
-  // =====================================================
-
-  const actualizarListado = () => {
-  if (cargando) return;
-
-  cargarActivos({
-    mostrarError: true,
-  });
-};
 
   // =====================================================
   // BÚSQUEDA EN LA PÁGINA ACTUAL
@@ -203,6 +185,8 @@ export default function ActivosDadosDeBaja() {
   const textoBusqueda = busqueda.trim().toLowerCase();
 
   const activosFiltrados = activos.filter((activo) => {
+    if (!textoBusqueda) return true;
+
     const valores = [
       activo.codigo_inventario,
       activo.categoria?.nombre,
@@ -220,58 +204,32 @@ export default function ActivosDadosDeBaja() {
   });
 
   // =====================================================
-  // DATOS DE RESUMEN
+  // PAGINACIÓN
   // =====================================================
 
-  const totalActivos = paginacion?.total ?? 0;
-  const totalPagina = activos.length;
-  const totalFiltrados = activosFiltrados.length;
+  const totalRegistros = Number(
+    paginacion?.total ?? 0
+  );
 
-  const paginaActual =
-    paginacion?.current_page ?? pagina;
+  const paginaActual = Number(
+    paginacion?.current_page ?? pagina
+  );
 
-  const ultimaPagina =
-    paginacion?.last_page ?? 1;
+  const ultimaPagina = Number(
+    paginacion?.last_page ?? 1
+  );
 
-  const desde = paginacion?.from ?? 0;
-  const hasta = paginacion?.to ?? 0;
+  const desde = Number(paginacion?.from ?? 0);
+  const hasta = Number(paginacion?.to ?? 0);
 
-  // =====================================================
-  // LIMPIAR BÚSQUEDA
-  // =====================================================
-
-  const limpiarBusqueda = () => {
-    setBusqueda("");
-  };
+  const hayBusqueda = textoBusqueda.length > 0;
 
   // =====================================================
-  // CAMBIAR PÁGINA
-  // =====================================================
-
-  const irPaginaAnterior = () => {
-    if (cargando || paginaActual <= 1) return;
-
-    setPagina((anterior) =>
-      Math.max(1, anterior - 1)
-    );
-  };
-
-  const irPaginaSiguiente = () => {
-    if (cargando || paginaActual >= ultimaPagina) {
-      return;
-    }
-
-    setPagina((anterior) =>
-      Math.min(ultimaPagina, anterior + 1)
-    );
-  };
-
-  // =====================================================
-  // RENDERIZADO PRINCIPAL
+  // RENDERIZADO
   // =====================================================
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 pb-10">
+    <div className="mx-auto w-full max-w-[1600px] space-y-5 pb-10">
 
       {/* =============================================
           NAVEGACIÓN
@@ -280,7 +238,7 @@ export default function ActivosDadosDeBaja() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to="/activos"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          className={botonSecundario}
         >
           <ArrowLeft size={17} />
           Volver al inventario
@@ -293,10 +251,13 @@ export default function ActivosDadosDeBaja() {
       </div>
 
       {/* =============================================
-          ENCABEZADO INSTITUCIONAL
+          CAJA 1 - ENCABEZADO INSTITUCIONAL
       ============================================= */}
 
       <header className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        {/* LÍNEA INSTITUCIONAL */}
+
         <div className="h-1 bg-blue-700" />
 
         <div className="flex flex-col justify-between gap-5 p-5 sm:p-6 lg:flex-row lg:items-center">
@@ -304,6 +265,7 @@ export default function ActivosDadosDeBaja() {
           {/* TÍTULO */}
 
           <div className="flex min-w-0 items-start gap-4">
+
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
               <Archive
                 size={27}
@@ -312,6 +274,7 @@ export default function ActivosDadosDeBaja() {
             </div>
 
             <div className="min-w-0">
+
               <p className="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
                 Administración del inventario
               </p>
@@ -320,416 +283,319 @@ export default function ActivosDadosDeBaja() {
                 Activos dados de baja
               </h1>
 
-              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
                 Consultá los equipos retirados del
-                inventario y accedé a su información
-                histórica.
+                inventario institucional y accedé
+                a su información histórica.
               </p>
+
             </div>
           </div>
 
-          {/* ACTUALIZAR */}
+          {/* BOTÓN ACTUALIZAR */}
 
-          <button
-            type="button"
-            onClick={actualizarListado}
-            disabled={cargando}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <RefreshCw
-              size={17}
-              className={cargando ? "animate-spin" : ""}
-            />
+          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+            <button
+              type="button"
+              onClick={cargarActivos}
+              disabled={cargando}
+              className={botonSecundario}
+            >
+              <RefreshCw
+                size={17}
+                className={
+                  cargando ? "animate-spin" : ""
+                }
+              />
 
-            {cargando
-              ? "Actualizando..."
-              : "Actualizar listado"}
-          </button>
+              {cargando
+                ? "Actualizando..."
+                : "Actualizar"}
+            </button>
+          </div>
+
         </div>
       </header>
 
       {/* =============================================
-          RESUMEN DE REGISTROS
+          CAJA 2 - LISTADO DE ACTIVOS DADOS DE BAJA
       ============================================= */}
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-        {/* TOTAL DE BAJAS */}
+        {/* =============================================
+            ENCABEZADO DEL LISTADO + BÚSQUEDA
+        ============================================= */}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-slate-500">
-              Total de activos dados de baja
-            </span>
+        <div className="border-b border-slate-100 p-5 sm:p-6">
 
-            <div className="rounded-xl bg-red-50 p-2.5 text-red-600">
-              <Archive size={19} />
+          <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
+
+            {/* TÍTULO DEL LISTADO */}
+
+            <div className="flex min-w-0 items-start gap-3">
+
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <Archive
+                  size={21}
+                  strokeWidth={1.8}
+                />
+              </div>
+
+              <div className="min-w-0">
+
+                <h2 className="text-lg font-bold tracking-tight text-slate-900">
+                  Listado de bajas
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Consultá los equipos retirados del inventario institucional.
+                </p>
+
+              </div>
+            </div>
+
+            {/* TOTAL, PÁGINA Y BÚSQUEDA */}
+
+            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+
+              {/* TOTAL DE ACTIVOS DADOS DE BAJA */}
+
+              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                {totalRegistros.toLocaleString("es-AR")}{" "}
+                {totalRegistros === 1
+                  ? "activo"
+                  : "activos"}
+              </span>
+
+              {/* PÁGINA ACTUAL */}
+
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                Página {paginaActual} de {ultimaPagina}
+              </span>
+
+              {/* BUSCADOR INTEGRADO */}
+
+              <div className="relative w-full sm:w-64">
+
+                <Search
+                  size={17}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+
+                <input
+                  type="text"
+                  value={busqueda}
+                  onChange={(event) =>
+                    setBusqueda(event.target.value)
+                  }
+                  placeholder="Buscar activo..."
+                  aria-label="Buscar activos dados de baja"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-9 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                />
+
+                {busqueda && (
+                  <button
+                    type="button"
+                    onClick={() => setBusqueda("")}
+                    title="Limpiar búsqueda"
+                    aria-label="Limpiar búsqueda"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+
+              </div>
             </div>
           </div>
 
-          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-            {totalActivos.toLocaleString("es-AR")}
-          </p>
+          {/* RESULTADOS DE BÚSQUEDA */}
 
-          <p className="mt-2 text-xs text-slate-400">
-            Registros históricos
-          </p>
-        </div>
-
-        {/* REGISTROS EN PÁGINA */}
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-slate-500">
-              Registros en esta página
-            </span>
-
-            <div className="rounded-xl bg-blue-50 p-2.5 text-blue-700">
-              <ClipboardList size={19} />
-            </div>
-          </div>
-
-          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-            {totalPagina.toLocaleString("es-AR")}
-          </p>
-
-          <p className="mt-2 text-xs text-slate-400">
-            Equipos cargados
-          </p>
-        </div>
-
-        {/* RESULTADOS VISIBLES */}
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-slate-500">
-              Resultados visibles
-            </span>
-
-            <div className="rounded-xl bg-slate-100 p-2.5 text-slate-600">
-              <Search size={19} />
-            </div>
-          </div>
-
-          <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
-            {totalFiltrados.toLocaleString("es-AR")}
-          </p>
-
-          <p className="mt-2 text-xs text-slate-400">
-            Coincidencias en la página actual
-          </p>
-        </div>
-      </section>
-
-      {/* =============================================
-          BÚSQUEDA Y FILTROS
-      ============================================= */}
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
-        {/* ENCABEZADO */}
-
-        <div className="mb-5 flex items-start gap-3 border-b border-slate-100 pb-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700">
-            <Search
-              size={19}
-              strokeWidth={1.8}
-            />
-          </div>
-
-          <div>
-            <h2 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
-              Buscar activos dados de baja
-            </h2>
-
-            <p className="mt-1 text-sm leading-relaxed text-slate-500">
-              Localizá equipos por código, categoría,
-              marca, modelo, número de serie o ubicación.
+          {hayBusqueda && !cargando && !error && (
+            <p className="mt-3 text-xs text-slate-500">
+              {activosFiltrados.length}{" "}
+              {activosFiltrados.length === 1
+                ? "resultado encontrado"
+                : "resultados encontrados"}{" "}
+              en la página actual.
             </p>
-          </div>
-        </div>
-
-        {/* BUSCADOR */}
-
-        <div className="relative">
-          <Search
-            size={19}
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-
-          <input
-            type="search"
-            value={busqueda}
-            onChange={(event) =>
-              setBusqueda(event.target.value)
-            }
-            placeholder="Buscar por código, categoría, marca, modelo..."
-            aria-label="Buscar activos dados de baja"
-            className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-11 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
-
-          {busqueda && (
-            <button
-              type="button"
-              onClick={limpiarBusqueda}
-              title="Limpiar búsqueda"
-              aria-label="Limpiar búsqueda"
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            >
-              <X size={17} />
-            </button>
           )}
+
         </div>
 
-        {/* ACLARACIÓN */}
+        {/* =============================================
+            ERROR DE CONSULTA
+        ============================================= */}
 
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-          <Info
-            size={17}
-            className="mt-0.5 shrink-0 text-slate-400"
-          />
-
-          <p className="text-xs leading-relaxed text-slate-500">
-            La búsqueda se realiza sobre los registros
-            de la página actual. Para consultar otros
-            equipos, utilizá los controles de paginación.
-          </p>
-        </div>
-      </section>
-
-      {/* =============================================
-          ERROR DE CARGA
-      ============================================= */}
-
-      {error && (
-        <div
-          role="alert"
-          className="flex flex-col gap-4 rounded-xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex items-start gap-3">
+        {error && (
+          <div
+            role="alert"
+            className="m-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 sm:m-6"
+          >
             <AlertCircle
-              size={21}
+              size={20}
               className="mt-0.5 shrink-0 text-red-600"
             />
 
-            <div>
-              <p className="text-sm font-bold text-red-800">
+            <div className="min-w-0 flex-1">
+
+              <p className="text-sm font-semibold text-red-800">
                 No se pudo cargar el listado
               </p>
 
               <p className="mt-1 text-sm text-red-700">
                 {error}
               </p>
+
             </div>
+
+            <button
+              type="button"
+              onClick={cargarActivos}
+              disabled={cargando}
+              className="shrink-0 text-sm font-semibold text-red-700 underline transition hover:text-red-900 disabled:opacity-50"
+            >
+              Reintentar
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              cargarActivos({
-                mostrarExito: false,
-                mostrarError: true,
-              })
-            }
-            disabled={cargando}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
-          >
-            <RefreshCw size={16} />
-            Reintentar
-          </button>
-        </div>
-      )}
-
-      {/* =============================================
-          LISTADO DE ACTIVOS
-      ============================================= */}
-
-      <section className="space-y-4">
-
-        {/* TÍTULO DE LA SECCIÓN */}
-
-        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
-              <ClipboardList
-                size={19}
-                strokeWidth={1.8}
-              />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900">
-                Listado de bajas
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Equipos retirados del inventario institucional.
-              </p>
-            </div>
-          </div>
-
-          {!cargando && !error && (
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
-              {totalFiltrados}{" "}
-              {totalFiltrados === 1
-                ? "registro visible"
-                : "registros visibles"}
-            </span>
-          )}
-        </div>
+        )}
 
         {/* =============================================
-            ESTADO DE CARGA
+            TABLA DE ACTIVOS DADOS DE BAJA
         ============================================= */}
 
         {cargando ? (
-          <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-              <RefreshCw
-                size={25}
-                className="animate-spin"
-              />
-            </div>
 
-            <h3 className="mt-5 text-base font-bold text-slate-800">
-              Cargando activos dados de baja
-            </h3>
+          /* ESTADO DE CARGA */
 
-            <p className="mt-2 text-sm text-slate-500">
-              Obteniendo los registros históricos del inventario...
-            </p>
-          </div>
-        ) : !error && activosFiltrados.length === 0 ? (
+          <div className="flex min-h-72 flex-col items-center justify-center gap-4 px-6 py-12">
 
-          /* =============================================
-              ESTADO VACÍO
-          ============================================= */
+            <RefreshCw
+              size={28}
+              className="animate-spin text-blue-700"
+            />
 
-          <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-              {textoBusqueda ? (
-                <Search size={26} />
-              ) : (
-                <Archive size={26} />
-              )}
-            </div>
-
-            <h3 className="mt-5 text-base font-bold text-slate-900">
-              {textoBusqueda
-                ? "No se encontraron coincidencias"
-                : "No hay activos dados de baja"}
-            </h3>
-
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-              {textoBusqueda
-                ? "No hay equipos que coincidan con la búsqueda en esta página."
-                : "Todavía no hay equipos dados de baja para mostrar en este listado."}
+            <p className="text-sm font-medium text-slate-600">
+              Cargando activos dados de baja...
             </p>
 
-            {textoBusqueda && (
-              <button
-                type="button"
-                onClick={limpiarBusqueda}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
-              >
-                <X size={16} />
-                Limpiar búsqueda
-              </button>
-            )}
           </div>
+
         ) : !error ? (
+          activosFiltrados.length > 0 ? (
 
-          /* =============================================
-              TABLA DE ACTIVOS
-          ============================================= */
+            /* TABLA CON REGISTROS */
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <div className="w-full overflow-x-auto">
+
+              <table className="w-full min-w-[950px] text-left text-sm">
+
+                {/* ENCABEZADOS */}
+
+                <thead className="border-b border-slate-200 bg-slate-50/80">
                   <tr>
-                    <th className="px-5 py-4 font-semibold">
+
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
                       Código
                     </th>
 
-                    <th className="px-5 py-4 font-semibold">
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
                       Categoría
                     </th>
 
-                    <th className="px-5 py-4 font-semibold">
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
                       Marca / Modelo
                     </th>
 
-                    <th className="px-5 py-4 font-semibold">
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
                       Ubicación
                     </th>
 
-                    <th className="px-5 py-4 font-semibold">
+                    <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
                       Fecha de baja
                     </th>
 
-                    <th className="px-5 py-4 text-center font-semibold">
+                    <th className="px-5 py-4 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
                       Acciones
                     </th>
+
                   </tr>
                 </thead>
 
+                {/* FILAS */}
+
                 <tbody className="divide-y divide-slate-100">
+
                   {activosFiltrados.map((activo) => (
                     <tr
                       key={activo.id}
-                      className="transition-colors hover:bg-slate-50"
+                      className="group transition-colors duration-150 hover:bg-slate-50/80"
                     >
 
                       {/* CÓDIGO */}
 
                       <td className="px-5 py-4">
+
                         <Link
                           to={`/activos/bajas/${activo.id}`}
-                          title="Consultar detalle del activo dado de baja"
-                          className="group inline-flex items-center gap-2 font-semibold text-blue-700 transition hover:text-blue-900"
+                          title={`Ver detalle de ${activo.codigo_inventario}`}
+                          className="inline-flex items-center gap-1.5 font-bold text-blue-700 transition-colors hover:text-blue-900 hover:underline hover:underline-offset-4 focus:outline-none focus:underline"
                         >
-                          <span className="break-all group-hover:underline">
+                          <span>
                             {activo.codigo_inventario}
                           </span>
 
                           <ExternalLink
-                            size={14}
-                            className="shrink-0 opacity-50 transition group-hover:opacity-100"
+                            size={13}
+                            className="shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
                           />
                         </Link>
+
                       </td>
 
                       {/* CATEGORÍA */}
 
-                      <td className="px-5 py-4 text-slate-700">
-                        {activo.categoria?.nombre ??
-                          "Sin categoría"}
+                      <td className="px-5 py-4">
+                        <span className="font-medium text-slate-700">
+                          {activo.categoria?.nombre ??
+                            "Sin categoría"}
+                        </span>
                       </td>
 
-                      {/* MARCA / MODELO */}
+                      {/* MARCA Y MODELO */}
 
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-800">
-                          {activo.marca || "Sin marca"}
-                        </p>
 
-                        <p className="mt-1 text-xs text-slate-500">
-                          {activo.modelo || "Sin modelo"}
-                        </p>
+                        <div className="flex flex-col">
+
+                          <span className="font-semibold text-slate-800">
+                            {activo.marca || "Sin marca"}
+                          </span>
+
+                          <span className="mt-1 text-xs text-slate-500">
+                            {activo.modelo || "Sin modelo"}
+                          </span>
+
+                        </div>
+
                       </td>
 
                       {/* UBICACIÓN */}
 
-                      <td className="px-5 py-4 text-slate-700">
-                        {activo.ubicacion?.nombre ??
-                          "Sin ubicación"}
+                      <td className="px-5 py-4">
+                        <span className="text-slate-700">
+                          {activo.ubicacion?.nombre ??
+                            "Sin ubicación"}
+                        </span>
                       </td>
 
                       {/* FECHA DE BAJA */}
 
                       <td className="px-5 py-4">
+
                         <div className="inline-flex items-center gap-2 text-slate-600">
+
                           <CalendarDays
                             size={15}
                             className="shrink-0 text-slate-400"
@@ -740,86 +606,160 @@ export default function ActivosDadosDeBaja() {
                               activo.deleted_at
                             )}
                           </span>
+
                         </div>
+
                       </td>
 
                       {/* ACCIONES */}
 
-                      <td className="px-5 py-4 text-center">
-                        <Link
-                          to={`/activos/bajas/${activo.id}`}
-                          title="Consultar activo dado de baja"
-                          aria-label={`Consultar ${activo.codigo_inventario}`}
-                          className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                        >
-                          <Eye size={17} />
-                        </Link>
+                      <td className="px-5 py-4">
+
+                        <div className="flex items-center justify-center gap-2">
+
+                          <Link
+                            to={`/activos/bajas/${activo.id}`}
+                            title="Ver detalle del activo dado de baja"
+                            aria-label={`Ver detalle de ${activo.codigo_inventario}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-all duration-150 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                          >
+                            <Eye
+                              size={17}
+                              strokeWidth={1.8}
+                            />
+                          </Link>
+
+                        </div>
+
                       </td>
+
                     </tr>
                   ))}
+
                 </tbody>
               </table>
             </div>
-          </div>
+
+          ) : (
+
+            /* ESTADO VACÍO */
+
+            <div className="flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center">
+
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                {hayBusqueda ? (
+                  <Search size={28} />
+                ) : (
+                  <Archive size={28} />
+                )}
+              </div>
+
+              <h3 className="mt-5 text-base font-semibold text-slate-900">
+                {hayBusqueda
+                  ? "No se encontraron resultados"
+                  : "No hay activos dados de baja"}
+              </h3>
+
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                {hayBusqueda
+                  ? "No hay coincidencias en esta página. Probá con otra búsqueda o cambiá de página."
+                  : "Todavía no hay equipos dados de baja para mostrar."}
+              </p>
+
+              {hayBusqueda && (
+                <button
+                  type="button"
+                  onClick={() => setBusqueda("")}
+                  className={`mt-5 ${botonSecundario}`}
+                >
+                  <X size={16} />
+                  Limpiar búsqueda
+                </button>
+              )}
+
+            </div>
+          )
         ) : null}
-      </section>
 
-      {/* =============================================
-          PAGINACIÓN
-      ============================================= */}
+        {/* =============================================
+            PAGINACIÓN INFERIOR
+        ============================================= */}
 
-      {!cargando && !error && paginacion && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        {!cargando && !error && paginacion && (
+          <div className="flex flex-col justify-between gap-4 border-t border-slate-100 bg-slate-50/50 px-5 py-5 sm:flex-row sm:items-center sm:px-6">
 
-            {/* INFORMACIÓN */}
+            {/* INFORMACIÓN DE REGISTROS */}
 
-            <div className="text-center sm:text-left">
-              <p className="text-sm font-semibold text-slate-700">
-                Mostrando {desde}–{hasta} de{" "}
-                {totalActivos.toLocaleString("es-AR")} activos
+            <div>
+
+              <p className="text-sm font-medium text-slate-700">
+                Mostrando{" "}
+                <span className="font-bold">
+                  {desde}–{hasta}
+                </span>{" "}
+                de{" "}
+                <span className="font-bold">
+                  {totalRegistros.toLocaleString("es-AR")}
+                </span>{" "}
+                {totalRegistros === 1
+                  ? "activo"
+                  : "activos"}
               </p>
 
               <p className="mt-1 text-xs text-slate-400">
-                Página {paginaActual} de {ultimaPagina}
+                Registros históricos del inventario
               </p>
+
             </div>
 
-            {/* CONTROLES */}
+            {/* CONTROLES DE PAGINACIÓN */}
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={
-                  cargando || paginaActual <= 1
+            <div className="flex flex-wrap items-center gap-2">
+
+              <BotonPaginacion
+                icono={ChevronLeft}
+                disabled={paginaActual <= 1 || cargando}
+                onClick={() =>
+                  setPagina((anterior) =>
+                    Math.max(1, anterior - 1)
+                  )
                 }
-                onClick={irPaginaAnterior}
-                className={clasesBoton}
               >
-                <ChevronLeft size={17} />
                 Anterior
-              </button>
+              </BotonPaginacion>
 
-              <span className="inline-flex min-w-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-sm font-bold text-blue-700">
-                {paginaActual}
-              </span>
+              <div className="flex min-w-20 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5">
 
-              <button
-                type="button"
+                <span className="text-sm font-semibold text-slate-700">
+                  {paginaActual} / {ultimaPagina}
+                </span>
+
+              </div>
+
+              <BotonPaginacion
+                icono={ChevronRight}
+                iconoDerecha
                 disabled={
-                  cargando ||
-                  paginaActual >= ultimaPagina
+                  paginaActual >= ultimaPagina ||
+                  cargando
                 }
-                onClick={irPaginaSiguiente}
-                className={clasesBoton}
+                onClick={() =>
+                  setPagina((anterior) =>
+                    Math.min(
+                      ultimaPagina,
+                      anterior + 1
+                    )
+                  )
+                }
               >
                 Siguiente
-                <ChevronRight size={17} />
-              </button>
+              </BotonPaginacion>
+
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </section>
     </div>
   );
 }

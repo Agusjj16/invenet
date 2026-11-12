@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Requests\CambiarEstadoReporteRequest;
 use App\Models\User;
 use App\Notifications\NotificacionInvenet;
+use App\Models\OrdenReparacion;
 
 class ReporteAnomaliaController extends Controller
 {
@@ -224,26 +225,127 @@ class ReporteAnomaliaController extends Controller
     {
         $usuario = $request->user();
 
-        // Verificar permisos del usuario.
-        $puedeVerTodos = $usuario->tienePermiso('reportes.todos');
-        $puedeVerPropios = $usuario->tienePermiso('reportes.propios');
+        // =====================================================
+        // PERMISOS DE CONSULTA
+        // =====================================================
 
-        // Debe tener al menos uno de los permisos.
-        if (!$puedeVerTodos && !$puedeVerPropios) {
-            return response()->json([
-                'message' => 'No tiene permiso para consultar reportes.'
-            ], 403);
+        $puedeVerTodos =
+            $usuario->tienePermiso('reportes.todos');
+
+        $puedeVerPropios =
+            $usuario->tienePermiso('reportes.propios');
+
+        $puedeVerAsignados =
+            $usuario->tienePermiso('ordenes.ver_asignadas');
+
+        $esPropio =
+            (int) $reporte->usuario_id === (int) $usuario->id;
+
+        $estaAsignado = false;
+
+        if ($puedeVerAsignados) {
+            $estaAsignado = OrdenReparacion::query()
+                ->where('reporte_id', $reporte->id)
+                ->where('tecnico_id', $usuario->id)
+                ->exists();
         }
 
-        // Si no puede ver todos, solo puede consultar los propios.
         if (
             !$puedeVerTodos &&
-            $reporte->usuario_id !== $usuario->id
+            !($puedeVerPropios && $esPropio) &&
+            !($puedeVerAsignados && $estaAsignado)
         ) {
             return response()->json([
-                'message' => 'No tiene permiso para consultar este reporte.'
+                'message' =>
+                    'No tiene permiso para consultar este reporte.'
             ], 403);
         }
+
+        // =====================================================
+        // REVISIÓN AUTOMÁTICA DEL ADMINISTRADOR
+        // =====================================================
+
+        $esAdministrador =
+            $usuario->rol?->nombre === 'Administrador';
+
+        if ($esAdministrador && $puedeVerTodos) {
+
+            DB::transaction(function () use ($reporte, $usuario) {
+
+                // Mantener el orden de bloqueos:
+                // primero activo y después reporte.
+                $activo = Activo::whereKey($reporte->activo_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $reporteBloqueado = ReporteAnomalia::whereKey(
+                    $reporte->id
+                )
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                // Consultar el estado actual dentro
+                // de la transacción.
+                $estadoPendiente = EstadoReporte::where(
+                    'nombre',
+                    'Pendiente'
+                )->firstOrFail();
+
+                // Solo realizar el cambio si sigue pendiente.
+                if (
+                    (int) $reporteBloqueado->estado_reporte_id !==
+                    (int) $estadoPendiente->id
+                ) {
+                    return;
+                }
+
+                $estadoRevision = EstadoReporte::where(
+                    'nombre',
+                    'En revisión'
+                )->firstOrFail();
+
+                // Guardar el estado anterior.
+                $estadoAnteriorId =
+                    $reporteBloqueado->estado_reporte_id;
+
+                // Cambiar automáticamente a En revisión.
+                $reporteBloqueado->estado_reporte_id =
+                    $estadoRevision->id;
+
+                $reporteBloqueado->save();
+
+                // =================================================
+                // HISTORIAL
+                // =================================================
+
+                HistorialActivo::create([
+                    'activo_id' => $activo->id,
+                    'usuario_id' => $usuario->id,
+                    'tipo_evento' => 'CAMBIO_ESTADO',
+                    'descripcion' =>
+                        'El administrador inició automáticamente ' .
+                        'la revisión del reporte de anomalía #' .
+                        $reporteBloqueado->id . '.',
+
+                    'datos_anteriores' => [
+                        'reporte_id' => $reporteBloqueado->id,
+                        'estado_reporte_id' => $estadoAnteriorId,
+                    ],
+
+                    'datos_nuevos' => [
+                        'reporte_id' => $reporteBloqueado->id,
+                        'estado_reporte_id' => $estadoRevision->id,
+                        'cambio_automatico' => true,
+                    ],
+                ]);
+            });
+        }
+
+        // =====================================================
+        // DEVOLVER EL REPORTE ACTUALIZADO
+        // =====================================================
+
+        $reporte->refresh();
 
         return response()->json(
             $reporte->load([
@@ -251,7 +353,7 @@ class ReporteAnomaliaController extends Controller
                 'activo.ubicacion',
                 'activo.estado',
                 'usuario',
-                'estado'
+                'estado',
             ])
         );
     }

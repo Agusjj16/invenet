@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -414,22 +413,7 @@ export default function HistorialActivos() {
 
             <div className="flex flex-wrap items-center gap-3 xl:justify-end">
 
-              {/* TOTAL DE MOVIMIENTOS */}
-
-              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
-                {totalRegistros.toLocaleString("es-AR")}{" "}
-                {totalRegistros === 1
-                  ? "movimiento"
-                  : "movimientos"}
-              </span>
-
-              {/* PÁGINA ACTUAL */}
-
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-                Página {paginaActual} de {ultimaPagina}
-              </span>
-
-              {/* BUSCADOR Y FILTRO DE EVENTOS */}
+                            {/* BUSCADOR Y FILTRO DE EVENTOS */}
 
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
 
@@ -519,6 +503,21 @@ export default function HistorialActivos() {
                   <X size={18} />
                 </button>
               )}
+
+              {/* TOTAL DE MOVIMIENTOS */}
+
+              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                {totalRegistros.toLocaleString("es-AR")}{" "}
+                {totalRegistros === 1
+                  ? "movimiento"
+                  : "movimientos"}
+              </span>
+
+              {/* PÁGINA ACTUAL */}
+
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                Página {paginaActual} de {ultimaPagina}
+              </span>
             </div>
           </div>
         </div>

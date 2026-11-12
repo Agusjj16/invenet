@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import {
   ArrowLeft,
-  Archive,
+  Trash,
   CalendarDays,
   CheckCircle2,
   ClipboardList,
@@ -462,18 +462,6 @@ export default function ActivoDetalle() {
 
             <div className="flex flex-wrap items-center gap-2">
 
-              {/* EDITAR ACTIVO */}
-
-              {puedeEditar && (
-                <Link
-                  to={`/activos/${activo.id}/editar`}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  <Pencil size={17} />
-                  Editar activo
-                </Link>
-              )}
-
               {/* VER HISTORIAL */}
 
               {puedeVerHistorial && (
@@ -486,6 +474,18 @@ export default function ActivoDetalle() {
                 </Link>
               )}
 
+              {/* EDITAR ACTIVO */}
+
+              {puedeEditar && (
+                <Link
+                  to={`/activos/${activo.id}/editar`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Pencil size={17} />
+                  Editar activo
+                </Link>
+              )}
+
               {/* DAR DE BAJA */}
 
               {puedeDarDeBaja && (
@@ -493,7 +493,7 @@ export default function ActivoDetalle() {
                   type="button"
                   onClick={solicitarBaja}
                   disabled={procesandoBaja}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 shadow-sm transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {procesandoBaja ? (
                     <RefreshCw
@@ -501,7 +501,7 @@ export default function ActivoDetalle() {
                       className="animate-spin"
                     />
                   ) : (
-                    <Archive size={17} />
+                    <Trash size={17} />
                   )}
 
                   {procesandoBaja

@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Eye,
+  Pencil,
   GraduationCap,
   Loader2,
   Mail,
@@ -25,9 +26,10 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  SlidersHorizontal,
+  Filter,
   UserRound,
   UserRoundX,
+  Trash,
   Users as UsersIcon,
   Wrench,
   X,
@@ -302,6 +304,9 @@ export default function Usuarios() {
 
   const puedeCrear =
     tienePermiso("usuarios.crear");
+
+  const puedeEditar =
+  tienePermiso("usuarios.editar");
 
   const puedeDesactivar =
     tienePermiso("usuarios.desactivar");
@@ -805,12 +810,6 @@ export default function Usuarios() {
             {/* TOTAL Y FILTROS */}
 
             <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
-                {usuarios.length.toLocaleString("es-AR")}{" "}
-                {usuarios.length === 1
-                  ? "usuario"
-                  : "usuarios"}
-              </span>
 
               {/* BUSCADOR */}
 
@@ -846,7 +845,7 @@ export default function Usuarios() {
               {/* FILTRO DE ROL */}
 
               <div className="relative w-full sm:w-48">
-                <SlidersHorizontal
+                <Filter
                   size={16}
                   className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                 />
@@ -895,6 +894,13 @@ export default function Usuarios() {
                   <X size={18} />
                 </button>
               )}
+
+              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                {usuarios.length.toLocaleString("es-AR")}{" "}
+                {usuarios.length === 1
+                  ? "usuario"
+                  : "usuarios"}
+              </span>
             </div>
           </div>
 
@@ -1011,9 +1017,6 @@ export default function Usuarios() {
 
                     <td className="whitespace-nowrap px-5 py-4 align-middle">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xs font-bold text-blue-700">
-                          {inicialesUsuario(usuario)}
-                        </div>
 
                         <div className="min-w-0">
                           <Link
@@ -1075,6 +1078,22 @@ export default function Usuarios() {
                           />
                         </Link>
 
+                        {/* EDITAR USUARIO */}
+
+                        {puedeEditar && (
+                          <Link
+                            to={`/usuarios/${usuario.id}`}
+                            title={`Editar ${nombreCompleto(usuario)}`}
+                            aria-label={`Editar ${nombreCompleto(usuario)}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-700 transition-all duration-150 hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                          >
+                            <Pencil
+                              size={17}
+                              strokeWidth={1.8}
+                            />
+                          </Link>
+                        )}
+
                         {/* DAR DE BAJA */}
 
                         {puedeDesactivar &&
@@ -1090,7 +1109,7 @@ export default function Usuarios() {
                               aria-label={`Dar de baja a ${nombreCompleto(usuario)}`}
                               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600 transition-all duration-150 hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                              <UserRoundX
+                              <Trash
                                 size={17}
                                 strokeWidth={1.8}
                               />

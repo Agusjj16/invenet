@@ -494,24 +494,11 @@ export default function Activos() {
               </div>
             </div>
 
+            
+
             {/* TOTAL, PÁGINA Y BÚSQUEDA */}
 
             <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-
-              {/* TOTAL DE ACTIVOS */}
-
-              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
-                {totalRegistros.toLocaleString("es-AR")}{" "}
-                {totalRegistros === 1
-                  ? "activo"
-                  : "activos"}
-              </span>
-
-              {/* PÁGINA ACTUAL */}
-
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-                Página {paginaActual} de {ultimaPagina}
-              </span>
 
               {/* BÚSQUEDA */}
 
@@ -545,6 +532,23 @@ export default function Activos() {
                 )}
 
               </div>
+
+              {/* TOTAL DE ACTIVOS */}
+
+              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                {totalRegistros.toLocaleString("es-AR")}{" "}
+                {totalRegistros === 1
+                  ? "activo"
+                  : "activos"}
+              </span>
+
+              {/* PÁGINA ACTUAL */}
+
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                Página {paginaActual} de {ultimaPagina}
+              </span>
+
+              
             </div>
           </div>
 

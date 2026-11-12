@@ -40,6 +40,8 @@ import {
   emitirNotificacionesActualizadas,
 } from "../utils/notificacionesEventos";
 
+import { useFeedback } from "../context/FeedbackContext";
+
 // =====================================================
 // ESTILOS COMPARTIDOS
 // =====================================================
@@ -200,7 +202,6 @@ function TarjetaNotificacion({
       <div className="flex items-start gap-3 sm:gap-4">
 
         {/* ÍCONO */}
-
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${configuracion.fondo} ${configuracion.color}`}
         >
@@ -208,13 +209,10 @@ function TarjetaNotificacion({
         </div>
 
         {/* CONTENIDO */}
-
         <div className="min-w-0 flex-1">
 
           {/* TÍTULO Y ESTADO */}
-
           <div className="flex flex-wrap items-center gap-2">
-
             <h3 className="text-sm font-bold text-slate-900 sm:text-base">
               {datos.titulo || "Notificación"}
             </h3>
@@ -228,14 +226,12 @@ function TarjetaNotificacion({
           </div>
 
           {/* MENSAJE */}
-
           <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">
             {datos.mensaje ||
               "Sin descripción disponible."}
           </p>
 
           {/* INFORMACIÓN ADICIONAL */}
-
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
 
             <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
@@ -267,16 +263,13 @@ function TarjetaNotificacion({
           </div>
 
           {/* ENLACE RELACIONADO */}
-
           {ruta && (
             <div className="mt-4 border-t border-slate-200/70 pt-3">
-
               <Link
                 to={ruta}
                 className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:text-blue-900 hover:underline hover:underline-offset-4"
               >
                 Ver detalle relacionado
-
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -284,7 +277,6 @@ function TarjetaNotificacion({
         </div>
 
         {/* ACCIÓN */}
-
         {!leida && (
           <button
             type="button"
@@ -324,11 +316,13 @@ function EstadoVacio({ filtro }) {
       descripcion:
         "Cuando haya novedades relacionadas con tu actividad en Invenet, aparecerán acá.",
     },
+
     no_leidas: {
       titulo: "No tenés notificaciones pendientes",
       descripcion:
         "Ya estás al día con tus notificaciones.",
     },
+
     leidas: {
       titulo: "Todavía no hay notificaciones leídas",
       descripcion:
@@ -362,6 +356,13 @@ function EstadoVacio({ filtro }) {
 // =====================================================
 
 export default function Notificaciones() {
+
+  // =====================================================
+  // FEEDBACK GLOBAL
+  // =====================================================
+
+  const { toast } = useFeedback();
+
   // =====================================================
   // ESTADOS
   // =====================================================
@@ -376,15 +377,11 @@ export default function Notificaciones() {
   const [filtro, setFiltro] = useState("todas");
 
   const [cargando, setCargando] = useState(true);
+
   const [actualizando, setActualizando] =
     useState(false);
 
   const [error, setError] = useState("");
-  const [errorAccion, setErrorAccion] =
-    useState("");
-
-  const [mensajeExito, setMensajeExito] =
-    useState("");
 
   // Estado de lectura
   const [cantidadNoLeidas, setCantidadNoLeidas] =
@@ -411,6 +408,7 @@ export default function Notificaciones() {
 
   const cargarNotificaciones = useCallback(
     async (esActualizacion = false) => {
+
       if (esActualizacion) {
         setActualizando(true);
       } else {
@@ -477,6 +475,7 @@ export default function Notificaciones() {
         setCantidadNoLeidas(
           Number(respuestaContador?.cantidad) || 0
         );
+
       } catch (err) {
         console.error(
           "Error al obtener notificaciones:",
@@ -492,6 +491,7 @@ export default function Notificaciones() {
         if (!esActualizacion) {
           setNotificaciones([]);
         }
+
       } finally {
         setCargando(false);
         setActualizando(false);
@@ -545,6 +545,7 @@ export default function Notificaciones() {
   // =====================================================
 
   const manejarMarcarLeida = async (id) => {
+
     if (
       marcandoId !== null ||
       marcandoTodas ||
@@ -555,8 +556,6 @@ export default function Notificaciones() {
     }
 
     setMarcandoId(id);
-    setErrorAccion("");
-    setMensajeExito("");
 
     try {
       const respuesta =
@@ -581,36 +580,47 @@ export default function Notificaciones() {
       // Sincronizar con la campana
       notificarActualizacion();
 
-      // Recuperar contador real
-      const contador =
-        await obtenerCantidadNoLeidas();
-
-      setCantidadNoLeidas(
-        Number(contador?.cantidad) || 0
-      );
-
-      setMensajeExito(
+      // Mostrar feedback global
+      toast.success(
         respuesta?.message ||
-          "Notificación marcada como leída."
+          "Notificación marcada como leída correctamente."
       );
+
+      // Recuperar contador real sin invalidar
+      // una operación que ya se completó.
+      try {
+        const contador =
+          await obtenerCantidadNoLeidas();
+
+        setCantidadNoLeidas(
+          Number(contador?.cantidad) || 0
+        );
+      } catch (errorContador) {
+        console.error(
+          "Error al actualizar el contador:",
+          errorContador
+        );
+      }
 
       // En filtros de leídas/sin leer,
-      // actualizar el listado y su paginación.
+      // actualizar listado y paginación.
       if (filtro !== "todas") {
         await cargarNotificaciones(true);
       }
+
     } catch (err) {
       console.error(
         "Error al marcar notificación:",
         err
       );
 
-      setErrorAccion(
+      toast.error(
         err.response?.data?.message ||
           "No se pudo marcar la notificación como leída."
       );
 
       await cargarNotificaciones(true);
+
     } finally {
       setMarcandoId(null);
     }
@@ -621,6 +631,7 @@ export default function Notificaciones() {
   // =====================================================
 
   const solicitarMarcarTodas = () => {
+
     if (
       cantidadNoLeidas === 0 ||
       marcandoTodas ||
@@ -631,8 +642,6 @@ export default function Notificaciones() {
       return;
     }
 
-    setErrorAccion("");
-    setMensajeExito("");
     setMostrarConfirmacionTodas(true);
   };
 
@@ -643,17 +652,18 @@ export default function Notificaciones() {
   };
 
   const confirmarMarcarTodas = async () => {
+
     if (
       cantidadNoLeidas === 0 ||
       marcandoTodas ||
       marcandoId !== null ||
-      actualizando
+      actualizando ||
+      cargando
     ) {
       return;
     }
 
     setMarcandoTodas(true);
-    setErrorAccion("");
 
     try {
       const respuesta =
@@ -662,6 +672,7 @@ export default function Notificaciones() {
       const fechaLectura =
         new Date().toISOString();
 
+      // Actualizar tarjetas
       setNotificaciones((anteriores) =>
         anteriores.map((notificacion) => ({
           ...notificacion,
@@ -673,23 +684,26 @@ export default function Notificaciones() {
       setCantidadNoLeidas(0);
       setMostrarConfirmacionTodas(false);
 
+      // Sincronizar con campana
       notificarActualizacion();
+
+      // Toast global de éxito
+      toast.success(
+        respuesta?.message ||
+          "Todas las notificaciones fueron marcadas como leídas."
+      );
 
       if (filtro !== "todas") {
         await cargarNotificaciones(true);
       }
 
-      setMensajeExito(
-        respuesta?.message ||
-          "Todas las notificaciones fueron marcadas como leídas."
-      );
     } catch (err) {
       console.error(
         "Error al marcar todas las notificaciones:",
         err
       );
 
-      setErrorAccion(
+      toast.error(
         err.response?.data?.message ||
           "No se pudieron marcar todas las notificaciones."
       );
@@ -697,6 +711,7 @@ export default function Notificaciones() {
       setMostrarConfirmacionTodas(false);
 
       await cargarNotificaciones(true);
+
     } finally {
       setMarcandoTodas(false);
     }
@@ -707,6 +722,7 @@ export default function Notificaciones() {
   // =====================================================
 
   const cambiarFiltro = (nuevoFiltro) => {
+
     if (
       nuevoFiltro === filtro ||
       marcandoTodas ||
@@ -719,9 +735,6 @@ export default function Notificaciones() {
     setNotificaciones([]);
     setPagina(1);
     setFiltro(nuevoFiltro);
-
-    setErrorAccion("");
-    setMensajeExito("");
   };
 
   // =====================================================
@@ -757,82 +770,6 @@ export default function Notificaciones() {
     <div className="mx-auto w-full max-w-[1600px] space-y-5 pb-10">
 
       {/* =============================================
-          MENSAJE DE ÉXITO
-      ============================================= */}
-
-      {mensajeExito && (
-        <div
-          role="status"
-          className="flex items-start justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
-        >
-          <div className="flex items-start gap-3">
-
-            <CheckCircle2
-              size={20}
-              className="mt-0.5 shrink-0 text-emerald-600"
-            />
-
-            <div>
-              <p className="text-sm font-semibold text-emerald-800">
-                Operación realizada correctamente
-              </p>
-
-              <p className="mt-1 text-sm text-emerald-700">
-                {mensajeExito}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setMensajeExito("")}
-            aria-label="Cerrar mensaje"
-            className="rounded-lg p-1 text-emerald-700 transition hover:bg-emerald-100"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      )}
-
-      {/* =============================================
-          ERROR DE ACCIÓN
-      ============================================= */}
-
-      {errorAccion && (
-        <div
-          role="alert"
-          className="flex items-start justify-between gap-4 rounded-xl border border-red-200 bg-red-50 p-4"
-        >
-          <div className="flex items-start gap-3">
-
-            <AlertCircle
-              size={20}
-              className="mt-0.5 shrink-0 text-red-600"
-            />
-
-            <div>
-              <p className="text-sm font-semibold text-red-800">
-                No se pudo completar la operación
-              </p>
-
-              <p className="mt-1 text-sm text-red-700">
-                {errorAccion}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setErrorAccion("")}
-            aria-label="Cerrar error"
-            className="rounded-lg p-1 text-red-700 transition hover:bg-red-100"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      )}
-
-      {/* =============================================
           CAJA 1 - ENCABEZADO INSTITUCIONAL
       ============================================= */}
 
@@ -843,7 +780,6 @@ export default function Notificaciones() {
         <div className="flex flex-col justify-between gap-5 p-5 sm:p-6 lg:flex-row lg:items-center">
 
           {/* TÍTULO */}
-
           <div className="flex min-w-0 items-start gap-4">
 
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
@@ -871,7 +807,6 @@ export default function Notificaciones() {
           </div>
 
           {/* BOTONES */}
-
           <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
 
             <button
@@ -929,13 +864,11 @@ export default function Notificaciones() {
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         {/* ENCABEZADO Y FILTROS */}
-
         <div className="border-b border-slate-100 p-5 sm:p-6">
 
           <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
 
             {/* TÍTULO */}
-
             <div className="flex min-w-0 items-start gap-3">
 
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
@@ -958,7 +891,6 @@ export default function Notificaciones() {
             </div>
 
             {/* CONTADORES */}
-
             <div className="flex flex-wrap items-center gap-2 xl:justify-end">
 
               <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
@@ -980,11 +912,10 @@ export default function Notificaciones() {
               </span>
             </div>
           </div>
-          {/* =============================================
-              FILTRO DE NOTIFICACIONES
-          ============================================= */}
 
+          {/* FILTRO DE NOTIFICACIONES */}
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+
             <label
               htmlFor="filtro-notificaciones"
               className="text-sm font-semibold text-slate-700"
@@ -993,6 +924,7 @@ export default function Notificaciones() {
             </label>
 
             <div className="relative w-full sm:w-56">
+
               <select
                 id="filtro-notificaciones"
                 value={filtro}
@@ -1020,10 +952,7 @@ export default function Notificaciones() {
           </div>
         </div>
 
-        {/* =============================================
-            ERROR DE CARGA
-        ============================================= */}
-
+        {/* ERROR DE CARGA */}
         {error && notificaciones.length > 0 && (
           <div
             role="alert"
@@ -1040,15 +969,10 @@ export default function Notificaciones() {
           </div>
         )}
 
-        {/* =============================================
-            CONTENIDO
-        ============================================= */}
-
+        {/* CONTENIDO */}
         <div className="p-5 sm:p-6">
 
           {cargando ? (
-
-            /* CARGANDO */
 
             <div className="flex min-h-72 flex-col items-center justify-center gap-3">
 
@@ -1063,8 +987,6 @@ export default function Notificaciones() {
             </div>
 
           ) : error && notificaciones.length === 0 ? (
-
-            /* ERROR */
 
             <div className="flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center">
 
@@ -1094,13 +1016,9 @@ export default function Notificaciones() {
 
           ) : notificaciones.length === 0 ? (
 
-            /* SIN RESULTADOS */
-
             <EstadoVacio filtro={filtro} />
 
           ) : (
-
-            /* LISTADO */
 
             <div className="space-y-3">
 
@@ -1125,11 +1043,9 @@ export default function Notificaciones() {
           )}
         </div>
 
-        {/* =============================================
-            PAGINACIÓN
-        ============================================= */}
-
+        {/* PAGINACIÓN */}
         {!cargando && ultimaPagina > 1 && (
+
           <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/50 px-5 py-5 sm:flex-row sm:px-6">
 
             <p className="text-sm font-medium text-slate-600">
@@ -1193,10 +1109,12 @@ export default function Notificaciones() {
       ============================================= */}
 
       {mostrarConfirmacionTodas && (
+
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
           role="presentation"
         >
+
           <div
             role="dialog"
             aria-modal="true"
@@ -1205,7 +1123,6 @@ export default function Notificaciones() {
           >
 
             {/* ÍCONO */}
-
             <div className="mb-5 flex items-start justify-between gap-4">
 
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
@@ -1224,7 +1141,6 @@ export default function Notificaciones() {
             </div>
 
             {/* CONTENIDO */}
-
             <h2
               id="titulo-marcar-todas"
               className="text-xl font-bold tracking-tight text-slate-900"
@@ -1263,7 +1179,6 @@ export default function Notificaciones() {
             </div>
 
             {/* BOTONES */}
-
             <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 
               <button

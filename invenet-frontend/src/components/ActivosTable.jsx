@@ -3,7 +3,7 @@ import {
   Eye,
   Pencil,
   Monitor,
-  Archive,
+  Trash,
   ExternalLink,
 } from "lucide-react";
 
@@ -193,7 +193,7 @@ export default function ActivosTable({
                       aria-label={`Dar de baja ${activo.codigo_inventario}`}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600 transition-all duration-150 hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      <Archive size={17} strokeWidth={1.8} />
+                      <Trash size={17} strokeWidth={1.8} />
                     </button>
                   )}
 

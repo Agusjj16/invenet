@@ -200,6 +200,11 @@ Route::middleware([
     Route::post('/activos/lote', [ActivoController::class, 'storeLote'])
     ->middleware('permiso:activos.crear');
 
+    // Equipos disponibles para registrar anomalías.
+    // No requiere permiso para consultar el inventario completo.
+    Route::get('/activos/reportables', [ActivoController::class,'reportables'])
+        ->middleware('permiso:reportes.crear');
+
     // Consultar activo
     Route::get('/activos/{activo}', [ActivoController::class, 'show'])
         ->middleware('permiso:activos.ver');
@@ -290,6 +295,7 @@ Route::middleware([
     Route::patch('/notificaciones/leer-todas', [NotificacionController::class, 'marcarTodasLeidas'])
         ->middleware('permiso:notificaciones.ver');
 
-    // DASHBOARD
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    // DASHBOARD - SOLO ADMINISTRADOR
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(\App\Http\Middleware\SoloAdministrador::class);
 });

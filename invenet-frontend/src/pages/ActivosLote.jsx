@@ -56,6 +56,7 @@ const nuevaFila = () => ({
   idLocal: siguienteId++,
   codigo_inventario: "",
   numero_serie: "",
+  ubicacion_id: "",
   marca: "",
   modelo: "",
   observaciones: "",
@@ -172,7 +173,6 @@ export default function ActivosLote() {
   const [caracteristicas, setCaracteristicas] = useState([]);
 
   const [categoriaId, setCategoriaId] = useState("");
-  const [ubicacionId, setUbicacionId] = useState("");
   const [fechaIngreso, setFechaIngreso] = useState(hoy());
 
   const [filas, setFilas] = useState(() => [nuevaFila()]);
@@ -501,6 +501,7 @@ export default function ActivosLote() {
       idLocal: siguienteId++,
       codigo_inventario: "",
       numero_serie: "",
+      ubicacion_id: "",
       caracteristicas: {
         ...original.caracteristicas,
       },
@@ -621,10 +622,29 @@ export default function ActivosLote() {
       return;
     }
 
-    if (!categoriaId || !ubicacionId || !fechaIngreso) {
+    if (!categoriaId || !fechaIngreso) {
       toast.warning(
-        "Completá la categoría, la ubicación y la fecha de ingreso."
+        "Completá la categoría y la fecha de ingreso."
       );
+      return;
+    }
+
+    const indiceSinUbicacion = filas.findIndex(
+      (fila) => !fila.ubicacion_id
+    );
+
+    if (indiceSinUbicacion !== -1) {
+      setFilasExpandidas((anteriores) => [
+        ...new Set([
+          ...anteriores,
+          filas[indiceSinUbicacion].idLocal,
+        ]),
+      ]);
+
+      toast.warning(
+        `Seleccioná una ubicación para el equipo ${indiceSinUbicacion + 1}.`
+      );
+
       return;
     }
 
@@ -640,7 +660,7 @@ export default function ActivosLote() {
         Number(categoriaId),
 
       ubicacion_id:
-        Number(ubicacionId),
+        Number(fila.ubicacion_id),
 
       fecha_ingreso:
         fechaIngreso,
@@ -889,7 +909,7 @@ export default function ActivosLote() {
             descripcion="Esta información se aplicará a todos los equipos incluidos en el lote."
           />
 
-          <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2">
 
             {/* CATEGORÍA */}
 
@@ -926,41 +946,6 @@ export default function ActivosLote() {
               </select>
             </CampoFormulario>
 
-            {/* UBICACIÓN */}
-
-            <CampoFormulario
-              id="ubicacion-lote"
-              etiqueta="Ubicación"
-              icono={MapPin}
-              obligatorio
-              error={errores.ubicacion_id?.[0]}
-            >
-              <select
-                id="ubicacion-lote"
-                required
-                value={ubicacionId}
-                disabled={guardando}
-                onChange={(event) => {
-                  setUbicacionId(event.target.value);
-                  limpiarError("ubicacion_id");
-                }}
-                className={clasesInput}
-              >
-                <option value="">
-                  Seleccionar ubicación
-                </option>
-
-                {ubicaciones.map((ubicacion) => (
-                  <option
-                    key={ubicacion.id}
-                    value={ubicacion.id}
-                  >
-                    {ubicacion.nombre}
-                  </option>
-                ))}
-              </select>
-            </CampoFormulario>
-
             {/* FECHA DE INGRESO */}
 
             <CampoFormulario
@@ -992,10 +977,9 @@ export default function ActivosLote() {
             />
 
             <p className="text-xs leading-relaxed text-blue-800">
-              Todos los equipos tendrán la misma
-              categoría, ubicación y fecha de ingreso.
-              El código de inventario y el número de
-              serie se completan individualmente.
+              Todos los equipos tendrán la misma categoría y fecha
+              de ingreso. La ubicación, el código de inventario y
+              los demás datos se completan individualmente.
             </p>
           </div>
         </section>
@@ -1232,6 +1216,44 @@ export default function ActivosLote() {
                       placeholder="Ej: INV-0201"
                       className={clasesInput}
                     />
+                  </CampoFormulario>
+
+                  {/* UBICACIÓN INDIVIDUAL */}
+
+                  <CampoFormulario
+                    id={`ubicacion-${fila.idLocal}`}
+                    etiqueta="Ubicación"
+                    icono={MapPin}
+                    obligatorio
+                    error={errorCampo(indice, "ubicacion_id")}
+                  >
+                    <select
+                      id={`ubicacion-${fila.idLocal}`}
+                      required
+                      disabled={guardando}
+                      value={fila.ubicacion_id}
+                      onChange={(event) =>
+                        actualizarFila(
+                          fila.idLocal,
+                          "ubicacion_id",
+                          event.target.value
+                        )
+                      }
+                      className={clasesInput}
+                    >
+                      <option value="">
+                        Seleccionar ubicación
+                      </option>
+
+                      {ubicaciones.map((ubicacion) => (
+                        <option
+                          key={ubicacion.id}
+                          value={ubicacion.id}
+                        >
+                          {ubicacion.nombre}
+                        </option>
+                      ))}
+                    </select>
                   </CampoFormulario>
 
                   {/* NÚMERO DE SERIE */}

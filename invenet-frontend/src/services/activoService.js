@@ -63,3 +63,11 @@ export const obtenerHistorialActivo = async (id) => {
 
   return response.data;
 };
+
+export const obtenerActivosReportables = async (params = {}) => {
+  const response = await api.get("/api/activos/reportables", {
+    params,
+  });
+
+  return response.data;
+};

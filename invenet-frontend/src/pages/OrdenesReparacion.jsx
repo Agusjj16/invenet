@@ -437,22 +437,7 @@ export default function OrdenesReparacion() {
 
             <div className="flex flex-wrap items-center gap-3 xl:justify-end">
 
-              {/* TOTAL */}
-
-              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
-                {totalRegistros.toLocaleString("es-AR")}{" "}
-                {totalRegistros === 1
-                  ? "orden"
-                  : "órdenes"}
-              </span>
-
-              {/* PÁGINA */}
-
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-                Página {paginaActual} de {ultimaPagina}
-              </span>
-
-              {/* BÚSQUEDA */}
+                            {/* BÚSQUEDA */}
 
               <div className="relative w-full sm:w-60">
 
@@ -534,6 +519,21 @@ export default function OrdenesReparacion() {
                   <X size={18} />
                 </button>
               )}
+
+              {/* TOTAL */}
+
+              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                {totalRegistros.toLocaleString("es-AR")}{" "}
+                {totalRegistros === 1
+                  ? "orden"
+                  : "órdenes"}
+              </span>
+
+              {/* PÁGINA */}
+
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                Página {paginaActual} de {ultimaPagina}
+              </span>
             </div>
           </div>
 

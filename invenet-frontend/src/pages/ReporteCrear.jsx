@@ -21,7 +21,7 @@ import {
 
 import { useFeedback } from "../context/FeedbackContext";
 
-import { obtenerActivos } from "../services/activoService";
+import { obtenerActivosReportables } from "../services/activoService";
 import { crearReporte } from "../services/reporteService";
 
 // =====================================================
@@ -166,6 +166,7 @@ export default function ReporteCrear() {
   // CARGAR ACTIVOS
   // =====================================================
 
+  
   useEffect(() => {
     let vigente = true;
 
@@ -174,8 +175,9 @@ export default function ReporteCrear() {
       setErrorActivos("");
 
       try {
-        const respuesta = await obtenerActivos({
+        const respuesta = await obtenerActivosReportables({
           page: pagina,
+          buscar: busqueda.trim() || undefined,
         });
 
         if (!vigente || !montadoRef.current) {
@@ -199,15 +201,12 @@ export default function ReporteCrear() {
           return;
         }
 
-        console.error(
-          "Error al cargar activos:",
-          error
-        );
+        console.error("Error al cargar equipos:", error);
 
         setErrorActivos(
           obtenerMensajeError(
             error,
-            "No se pudieron cargar los activos del inventario."
+            "No se pudieron cargar los equipos disponibles."
           )
         );
 
@@ -224,40 +223,20 @@ export default function ReporteCrear() {
       }
     };
 
-    cargarActivos();
+    const temporizador = setTimeout(cargarActivos, 300);
 
     return () => {
       vigente = false;
+      clearTimeout(temporizador);
     };
-  }, [pagina, recargaActivos]);
+  }, [pagina, busqueda, recargaActivos]);
+
 
   // =====================================================
   // FILTRAR ACTIVOS DE LA PÁGINA
   // =====================================================
 
-  const activosFiltrados = activos.filter((activo) => {
-    const termino = busqueda.trim().toLowerCase();
-
-    if (!termino) return true;
-
-    const codigo = String(
-      activo.codigo_inventario ?? ""
-    ).toLowerCase();
-
-    const marca = String(
-      activo.marca ?? ""
-    ).toLowerCase();
-
-    const modelo = String(
-      activo.modelo ?? ""
-    ).toLowerCase();
-
-    return (
-      codigo.includes(termino) ||
-      marca.includes(termino) ||
-      modelo.includes(termino)
-    );
-  });
+  const activosFiltrados = activos;
 
   // =====================================================
   // SELECCIONAR ACTIVO
@@ -600,9 +579,10 @@ export default function ReporteCrear() {
                   <input
                     type="text"
                     value={busqueda}
-                    onChange={(event) =>
-                      setBusqueda(event.target.value)
-                    }
+                    onChange={(event) => {
+                      setBusqueda(event.target.value);
+                      setPagina(1);
+                    }}
                     placeholder="Buscar por código, marca o modelo en esta página..."
                     aria-label="Buscar activos"
                     className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
@@ -611,7 +591,10 @@ export default function ReporteCrear() {
                   {busqueda && (
                     <button
                       type="button"
-                      onClick={() => setBusqueda("")}
+                      onClick={() => {
+                        setBusqueda("");
+                        setPagina(1);
+                      }}
                       aria-label="Limpiar búsqueda"
                       className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                     >
@@ -641,8 +624,8 @@ export default function ReporteCrear() {
               {/* ACLARACIÓN DE BÚSQUEDA */}
 
               <p className="text-xs text-slate-400">
-                La búsqueda filtra los equipos visibles
-                en la página actual del inventario.
+                Buscá equipos por código de inventario, marca o modelo.
+                Los resultados se consultan en todo el registro de equipos disponibles.
               </p>
 
               {/* ERROR AL CARGAR ACTIVOS */}

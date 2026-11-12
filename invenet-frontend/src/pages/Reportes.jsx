@@ -406,22 +406,7 @@ export default function Reportes() {
 
             <div className="flex flex-wrap items-center gap-3 xl:justify-end">
 
-              {/* TOTAL DE REPORTES */}
-
-              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
-                {totalRegistros.toLocaleString("es-AR")}{" "}
-                {totalRegistros === 1
-                  ? "reporte"
-                  : "reportes"}
-              </span>
-
-              {/* PÁGINA ACTUAL */}
-
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-                Página {paginaActual} de {ultimaPagina}
-              </span>
-
-              {/* FILTRO DE ESTADO */}
+                            {/* FILTRO DE ESTADO */}
 
               {puedeVerTodos && (
                 <div className="relative min-w-[210px] flex-1 sm:flex-none">
@@ -459,6 +444,21 @@ export default function Reportes() {
                   />
                 </div>
               )}
+
+              {/* TOTAL DE REPORTES */}
+
+              <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                {totalRegistros.toLocaleString("es-AR")}{" "}
+                {totalRegistros === 1
+                  ? "reporte"
+                  : "reportes"}
+              </span>
+
+              {/* PÁGINA ACTUAL */}
+
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+                Página {paginaActual} de {ultimaPagina}
+              </span>
             </div>
           </div>
         </div>

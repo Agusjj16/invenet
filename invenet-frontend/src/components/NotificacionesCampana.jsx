@@ -504,13 +504,13 @@ export default function NotificacionesCampana() {
         className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition ${
           abierto
             ? "bg-slate-700 text-blue-400"
-            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+            : "text-slate-700 hover:bg-slate-800 hover:text-white"
         }`}
       >
         <Bell size={21} />
 
         {cantidad > 0 && (
-          <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-slate-900">
+          <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-700 px-1 text-[10px] font-bold text-white ring-1 ring-slate-300">
             {cantidad > 99 ? "99+" : cantidad}
           </span>
         )}

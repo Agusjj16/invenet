@@ -8,8 +8,6 @@ import {
 
 import {
   Bell,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   History,
   LayoutDashboard,
@@ -41,11 +39,20 @@ const botonIcono =
 
 const MODULOS = [
   {
+  nombre: "Inicio",
+  descripcion: "Panel de control",
+  ruta: "/dashboard",
+  icono: LayoutDashboard,
+  permisos: [],
+  soloAdministrador: true,
+  },
+  {
     nombre: "Inicio",
     descripcion: "Panel principal",
-    ruta: "/",
+    ruta: "/inicio",
     icono: LayoutDashboard,
     permisos: [],
+    soloNoAdministrador: true,
   },
   {
     nombre: "Activos",
@@ -135,7 +142,7 @@ function obtenerModuloActual(pathname, modulos) {
   return (
     coincidencias.sort(
       (a, b) => b.ruta.length - a.ruta.length
-    )[0] ?? MODULOS[0]
+    )[0] ?? modulos[0] ?? MODULOS[0]
   );
 }
 
@@ -217,18 +224,26 @@ export default function MainLayout() {
   // =====================================================
 
   const enlacesVisibles = useMemo(() => {
-    return MODULOS.filter((modulo) => {
-      if (modulo.permisos.length === 0) {
-        return true;
-      }
+  return MODULOS.filter((modulo) => {
+    if (modulo.soloAdministrador && !esAdministrador) {
+      return false;
+    }
 
-      return (
-        esAdministrador ||
-        modulo.permisos.some((permiso) =>
-          nombresPermisos.has(permiso)
-        )
-      );
-    });
+    if (modulo.soloNoAdministrador && esAdministrador) {
+      return false;
+    }
+
+    if (modulo.permisos.length === 0) {
+      return true;
+    }
+
+    return (
+      esAdministrador ||
+      modulo.permisos.some((permiso) =>
+        nombresPermisos.has(permiso)
+      )
+    );
+  });
   }, [esAdministrador, nombresPermisos]);
 
   // =====================================================

@@ -129,6 +129,62 @@ class ActivoController extends Controller
         return response()->json($activos);
     }
 
+    public function reportables(Request $request)
+    {
+        $filtros = $request->validate([
+            'buscar' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $query = Activo::query()
+            ->select([
+                'id',
+                'codigo_inventario',
+                'marca',
+                'modelo',
+                'estado_id',
+            ])
+            ->with([
+                'estado:id,nombre',
+            ])
+            ->whereHas('estado', function ($query) {
+                $query->whereNotIn('nombre', [
+                    'En reparación',
+                    'Dado de baja',
+                ]);
+            });
+
+        if (!empty($filtros['buscar'])) {
+            $buscar = trim($filtros['buscar']);
+
+            $query->where(function ($q) use ($buscar) {
+                $q->where(
+                    'codigo_inventario',
+                    'like',
+                    "%{$buscar}%"
+                )
+                ->orWhere(
+                    'marca',
+                    'like',
+                    "%{$buscar}%"
+                )
+                ->orWhere(
+                    'modelo',
+                    'like',
+                    "%{$buscar}%"
+                );
+            });
+        }
+
+        return response()->json(
+            $query
+                ->orderBy('codigo_inventario')
+                ->orderBy('id')
+                ->paginate(15)
+                ->withQueryString()
+        );
+    }
+
     public function show(Activo $activo)
     {
         return response()->json(

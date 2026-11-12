@@ -82,12 +82,6 @@ function obtenerMensajeError(error, mensajeAlternativo) {
 
 function obtenerEstadosDisponibles(estadoActual) {
   switch (estadoActual) {
-    case "Pendiente":
-      return [
-        { id: 2, nombre: "En revisión" },
-        { id: 4, nombre: "Cerrado" },
-      ];
-
     case "En revisión":
       return [{ id: 4, nombre: "Cerrado" }];
 
@@ -890,7 +884,7 @@ export default function ReporteDetalle() {
           <EncabezadoSeccion
             icono={ShieldCheck}
             titulo="Gestión del reporte"
-            descripcion="Actualizá el estado según el seguimiento realizado."
+            descripcion="El reporte pasa automáticamente a revisión al ser abierto por un administrador."
             color="violet"
           />
 
@@ -925,15 +919,8 @@ export default function ReporteDetalle() {
                           : botonPrincipal
                       }
                     >
-                      {estado.nombre === "Cerrado" ? (
-                        <CheckCircle2 size={17} />
-                      ) : (
-                        <Clock3 size={17} />
-                      )}
-
-                      {estado.nombre === "Cerrado"
-                        ? "Cerrar reporte"
-                        : "Pasar a En revisión"}
+                      <CheckCircle2 size={17} />
+                      Cerrar reporte
                     </button>
                   ))}
 

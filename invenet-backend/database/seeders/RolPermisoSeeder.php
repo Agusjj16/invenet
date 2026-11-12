@@ -3,71 +3,98 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Rol;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class RolPermisoSeeder extends Seeder
 {
     public function run(): void
     {
-        $administrador = DB::table('roles')
-            ->where('nombre', 'Administrador')
-            ->value('id');
+        DB::transaction(function () {
 
-        $docente = DB::table('roles')
-            ->where('nombre', 'Docente')
-            ->value('id');
+            $administrador = DB::table('roles')
+                ->where('nombre', 'Administrador')
+                ->value('id');
 
-        $tecnico = DB::table('roles')
-            ->where('nombre', 'Técnico')
-            ->value('id');
+            $docente = DB::table('roles')
+                ->where('nombre', 'Docente')
+                ->value('id');
 
+            $tecnico = DB::table('roles')
+                ->where('nombre', 'Técnico')
+                ->value('id');
 
-        // ADMINISTRADOR
-        $todosLosPermisos = DB::table('permisos')->pluck('id');
+            if (!$administrador || !$docente || !$tecnico) {
+                throw new RuntimeException(
+                    'Faltan roles para asignar permisos.'
+                );
+            }
 
-        foreach ($todosLosPermisos as $permisoId) {
-            DB::table('rol_permiso')->insert([
-                'rol_id' => $administrador,
-                'permiso_id' => $permisoId,
-            ]);
-        }
+            // ADMINISTRADOR: todos los permisos.
+            $todos = DB::table('permisos')
+                ->pluck('id')
+                ->all();
 
+            // DOCENTE: reportar y consultar sus reportes.
+            $permisosDocente = [
+                'reportes.crear',
+                'reportes.propios',
+                'notificaciones.ver',
+            ];
 
-        // DOCENTE
-        $permisosDocente = [
-            'activos.ver',
-            'reportes.crear',
-            'reportes.propios',
-            'notificaciones.ver',
-        ];
+            // TÉCNICO: gestionar sus reparaciones.
+            $permisosTecnico = [
+                'ordenes.ver_asignadas',
+                'ordenes.reparar',
+                'ordenes.finalizar',
+                'notificaciones.ver',
+            ];
 
-        $this->asignarPermisos($docente, $permisosDocente);
+            $this->sincronizar($administrador, $todos);
 
+            $this->sincronizar(
+                $docente,
+                $this->obtenerIds($permisosDocente)
+            );
 
-        // TÉCNICO
-        $permisosTecnico = [
-            'activos.ver',
-            'reportes.crear',
-            'reportes.propios',
-            'ordenes.ver_asignadas',
-            'ordenes.reparar',
-            'ordenes.finalizar',
-            'notificaciones.ver',
-        ];
-
-        $this->asignarPermisos($tecnico, $permisosTecnico);
+            $this->sincronizar(
+                $tecnico,
+                $this->obtenerIds($permisosTecnico)
+            );
+        });
     }
 
+    private function obtenerIds(array $nombres): array
+    {
+        $permisos = DB::table('permisos')
+            ->whereIn('nombre', $nombres)
+            ->pluck('id', 'nombre');
 
-    private function asignarPermisos(
+        $faltantes = array_diff(
+            $nombres,
+            $permisos->keys()->all()
+        );
+
+        if (!empty($faltantes)) {
+            throw new RuntimeException(
+                'Permisos inexistentes: ' .
+                implode(', ', $faltantes)
+            );
+        }
+
+        return $permisos->values()->all();
+    }
+
+    private function sincronizar(
         int $rolId,
-        array $permisos
+        array $permisosIds
     ): void {
-        $ids = DB::table('permisos')
-            ->whereIn('nombre', $permisos)
-            ->pluck('id');
+        DB::table('rol_permiso')
+            ->where('rol_id', $rolId)
+            ->delete();
 
-        foreach ($ids as $permisoId) {
+        foreach ($permisosIds as $permisoId) {
             DB::table('rol_permiso')->insert([
                 'rol_id' => $rolId,
                 'permiso_id' => $permisoId,

@@ -1,4 +1,3 @@
-
 import {
   useCallback,
   useEffect,
@@ -27,7 +26,7 @@ import {
   Save,
   ShieldCheck,
   UserRound,
-  UserRoundX,
+  Trash,
   Users,
   Wrench,
   X,
@@ -1302,7 +1301,7 @@ export default function UsuarioDetalle() {
                     className="animate-spin"
                   />
                 ) : (
-                  <UserRoundX size={17} />
+                  <Trash size={17} />
                 )}
 
                 {desactivando

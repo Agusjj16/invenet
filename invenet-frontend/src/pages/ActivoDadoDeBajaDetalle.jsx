@@ -366,13 +366,6 @@ export default function ActivoDadoDeBajaDetalle() {
 
           <div className="flex flex-wrap items-center gap-3">
 
-            {/* ESTADO */}
-
-            <span className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800">
-              <Archive size={16} />
-              Dado de baja
-            </span>
-
             {/* HISTORIAL */}
 
             {puedeVerHistorial && (
@@ -385,6 +378,13 @@ export default function ActivoDadoDeBajaDetalle() {
                 Ver historial
               </Link>
             )}
+
+            {/* ESTADO */}
+
+            <span className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800">
+              <Archive size={16} />
+              Dado de baja
+            </span>
           </div>
         </div>
       </header>

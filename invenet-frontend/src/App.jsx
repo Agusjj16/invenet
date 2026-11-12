@@ -34,6 +34,8 @@ import Categorias from "./pages/Categorias";
 import Ubicaciones from "./pages/Ubicaciones";
 import Caracteristicas from "./pages/Caracteristicas";
 import OpcionesCaracteristicas from "./pages/OpcionesCaracteristicas";
+import { useAuth } from "./context/AuthContext";
+import Inicio from "./pages/Inicio";
 
 // =====================================
 // LAYOUT
@@ -52,6 +54,24 @@ import PermissionRoute from "./routes/PermissionRoute";
 // =====================================
 // APP
 // =====================================
+
+function EntradaPrincipal() {
+  const { user } = useAuth();
+
+  return user?.rol?.nombre === "Administrador"
+    ? <Navigate to="/dashboard" replace />
+    : <Navigate to="/inicio" replace />;
+}
+
+function SoloAdministrador({ children }) {
+  const { user } = useAuth();
+
+  if (user?.rol?.nombre !== "Administrador") {
+    return <Navigate to="/inicio" replace />;
+  }
+
+  return children;
+}
 
 export default function App() {
   return (
@@ -78,12 +98,30 @@ export default function App() {
         <Route element={<MainLayout />}>
 
           {/* =====================================
-              DASHBOARD
+              INICIO SEGÚN ROL
           ===================================== */}
 
           <Route
             index
-            element={<Dashboard />}
+            element={<EntradaPrincipal />}
+          />
+
+          <Route
+            path="inicio"
+            element={<Inicio />}
+          />
+
+          {/* =====================================
+              DASHBOARD - SOLO ADMINISTRADOR
+          ===================================== */}
+
+          <Route
+            path="dashboard"
+            element={
+              <SoloAdministrador>
+                <Dashboard />
+              </SoloAdministrador>
+            }
           />
 
           {/* =====================================
