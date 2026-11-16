@@ -14,7 +14,6 @@ import {
   LogOut,
   Menu,
   Monitor,
-  MonitorCog,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
@@ -25,6 +24,7 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import NotificacionesCampana from "../components/NotificacionesCampana";
+import logo from "../assets/logo.png";
 
 // =====================================================
 // ESTILOS COMPARTIDOS
@@ -39,12 +39,12 @@ const botonIcono =
 
 const MODULOS = [
   {
-  nombre: "Inicio",
-  descripcion: "Panel de control",
-  ruta: "/dashboard",
-  icono: LayoutDashboard,
-  permisos: [],
-  soloAdministrador: true,
+    nombre: "Inicio",
+    descripcion: "Panel de control",
+    ruta: "/dashboard",
+    icono: LayoutDashboard,
+    permisos: [],
+    soloAdministrador: true,
   },
   {
     nombre: "Inicio",
@@ -199,7 +199,8 @@ export default function MainLayout() {
   // PERMISOS
   // =====================================================
 
-  const permisos = user?.rol?.permisos ?? user?.permisos ?? [];
+  const permisos =
+    user?.rol?.permisos ?? user?.permisos ?? [];
 
   const esAdministrador =
     user?.rol?.nombre === "Administrador";
@@ -224,26 +225,29 @@ export default function MainLayout() {
   // =====================================================
 
   const enlacesVisibles = useMemo(() => {
-  return MODULOS.filter((modulo) => {
-    if (modulo.soloAdministrador && !esAdministrador) {
-      return false;
-    }
+    return MODULOS.filter((modulo) => {
+      if (modulo.soloAdministrador && !esAdministrador) {
+        return false;
+      }
 
-    if (modulo.soloNoAdministrador && esAdministrador) {
-      return false;
-    }
+      if (
+        modulo.soloNoAdministrador &&
+        esAdministrador
+      ) {
+        return false;
+      }
 
-    if (modulo.permisos.length === 0) {
-      return true;
-    }
+      if (modulo.permisos.length === 0) {
+        return true;
+      }
 
-    return (
-      esAdministrador ||
-      modulo.permisos.some((permiso) =>
-        nombresPermisos.has(permiso)
-      )
-    );
-  });
+      return (
+        esAdministrador ||
+        modulo.permisos.some((permiso) =>
+          nombresPermisos.has(permiso)
+        )
+      );
+    });
   }, [esAdministrador, nombresPermisos]);
 
   // =====================================================
@@ -272,7 +276,8 @@ export default function MainLayout() {
   useEffect(() => {
     if (!menuAbierto) return;
 
-    const overflowAnterior = document.body.style.overflow;
+    const overflowAnterior =
+      document.body.style.overflow;
 
     document.body.style.overflow = "hidden";
 
@@ -294,7 +299,10 @@ export default function MainLayout() {
       }
     };
 
-    window.addEventListener("keydown", manejarTecla);
+    window.addEventListener(
+      "keydown",
+      manejarTecla
+    );
 
     return () => {
       window.removeEventListener(
@@ -369,14 +377,15 @@ export default function MainLayout() {
               )}
             </button>
 
-            {/* IDENTIDAD DE INVENET */}
+            {/* IDENTIDAD ORIGINAL DE INVENET */}
 
             <div className="flex shrink-0 items-center gap-3">
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-700 text-white shadow-sm">
-                <MonitorCog
-                  size={24}
-                  strokeWidth={1.8}
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-white p-1 shadow-sm">
+                <img
+                  src={logo}
+                  alt="Logo de Invenet"
+                  className="h-full w-full object-contain"
                 />
               </div>
 
@@ -509,7 +518,9 @@ export default function MainLayout() {
       <aside
         id="invenet-sidebar"
         className={`fixed bottom-0 left-0 top-[72px] z-30 flex flex-col border-r border-slate-200 bg-white shadow-xl shadow-slate-900/5 transition-[width,transform] duration-200 ease-in-out md:shadow-none ${
-          menuContraido ? "md:w-[84px]" : "md:w-64"
+          menuContraido
+            ? "md:w-[84px]"
+            : "md:w-64"
         } w-64 ${
           menuAbierto
             ? "translate-x-0"
@@ -624,7 +635,9 @@ export default function MainLayout() {
 
                     <span
                       className={`min-w-0 flex-1 truncate ${
-                        menuContraido ? "md:hidden" : ""
+                        menuContraido
+                          ? "md:hidden"
+                          : ""
                       }`}
                     >
                       {item.nombre}
@@ -635,7 +648,9 @@ export default function MainLayout() {
                     {isActive && (
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full bg-white/90 ${
-                          menuContraido ? "md:hidden" : ""
+                          menuContraido
+                            ? "md:hidden"
+                            : ""
                         }`}
                       />
                     )}
@@ -647,6 +662,7 @@ export default function MainLayout() {
           })}
 
         </nav>
+
       </aside>
 
       {/* =============================================
