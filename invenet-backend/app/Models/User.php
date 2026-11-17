@@ -56,9 +56,20 @@ class User extends Authenticatable
 
     public function tienePermiso(string $permiso): bool
     {
-        return $this->rol
-            ->permisos()
-            ->where('nombre', $permiso)
-            ->exists();
+        // Cargar el rol si todavía no está disponible.
+        $this->loadMissing('rol');
+
+        if (!$this->rol) {
+            return false;
+        }
+
+        // Cargar los permisos una sola vez.
+        $this->rol->loadMissing('permisos');
+
+        // Comprobar el permiso en la colección cargada.
+        return $this->rol->permisos->contains(
+            'nombre',
+            $permiso
+        );
     }
 }
