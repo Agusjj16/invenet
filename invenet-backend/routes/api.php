@@ -35,10 +35,7 @@ Route::middleware('throttle:5,1')->group(function () {
     );
 });
 
-Route::middleware([
-    'auth:sanctum',
-    'usuario.activo'
-])->group(function () {
+Route::middleware(['auth:sanctum','usuario.activo'])->group(function () {
 
     // AUTENTICACION Y USUARIOS
 

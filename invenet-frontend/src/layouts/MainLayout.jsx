@@ -8,6 +8,7 @@ import {
 
 import {
   Bell,
+  CircleHelp,
   ClipboardList,
   History,
   LayoutDashboard,
@@ -152,15 +153,10 @@ function obtenerModuloActual(pathname, modulos) {
 
 export default function MainLayout() {
   // =====================================================
-  // AUTENTICACIÓN
+  // AUTENTICACIÓN Y UBICACIÓN
   // =====================================================
 
   const { user, logout } = useAuth();
-
-  // =====================================================
-  // UBICACIÓN ACTUAL
-  // =====================================================
-
   const location = useLocation();
 
   // =====================================================
@@ -168,25 +164,23 @@ export default function MainLayout() {
   // =====================================================
 
   const [menuAbierto, setMenuAbierto] = useState(false);
-
   const [menuContraido, setMenuContraido] = useState(false);
-
-  const [cerrandoSesion, setCerrandoSesion] =
-    useState(false);
-
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
   const [errorLogout, setErrorLogout] = useState("");
+
+  // Nuevo estado para el modal de confirmación
+  const [modalLogoutAbierto, setModalLogoutAbierto] =
+    useState(false);
 
   // =====================================================
   // DATOS DEL USUARIO
   // =====================================================
 
-  const nombreCompleto = [
-    user?.nombre,
-    user?.apellido,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim() || "Usuario";
+  const nombreCompleto =
+    [user?.nombre, user?.apellido]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "Usuario";
 
   const nombreRol = user?.rol?.nombre ?? "Usuario";
 
@@ -299,10 +293,7 @@ export default function MainLayout() {
       }
     };
 
-    window.addEventListener(
-      "keydown",
-      manejarTecla
-    );
+    window.addEventListener("keydown", manejarTecla);
 
     return () => {
       window.removeEventListener(
@@ -313,7 +304,28 @@ export default function MainLayout() {
   }, [menuAbierto]);
 
   // =====================================================
-  // CERRAR SESIÓN
+  // SOLICITAR CIERRE DE SESIÓN
+  // =====================================================
+
+  const solicitarLogout = () => {
+    if (cerrandoSesion) return;
+
+    setErrorLogout("");
+    setModalLogoutAbierto(true);
+  };
+
+  // =====================================================
+  // CANCELAR CIERRE DE SESIÓN
+  // =====================================================
+
+  const cancelarLogout = () => {
+    if (cerrandoSesion) return;
+
+    setModalLogoutAbierto(false);
+  };
+
+  // =====================================================
+  // CONFIRMAR CIERRE DE SESIÓN
   // =====================================================
 
   const handleLogout = async () => {
@@ -324,14 +336,53 @@ export default function MainLayout() {
 
     try {
       await logout();
+      setModalLogoutAbierto(false);
     } catch {
       setErrorLogout(
         "No se pudo cerrar la sesión. Intentá nuevamente."
       );
+      setModalLogoutAbierto(false);
     } finally {
       setCerrandoSesion(false);
     }
   };
+
+  // =====================================================
+  // MODAL: BLOQUEAR SCROLL Y CERRAR CON ESC
+  // =====================================================
+
+  useEffect(() => {
+    if (!modalLogoutAbierto) return;
+
+    const overflowAnterior =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    const manejarEscape = (event) => {
+      if (
+        event.key === "Escape" &&
+        !cerrandoSesion
+      ) {
+        setModalLogoutAbierto(false);
+      }
+    };
+
+    window.addEventListener(
+      "keydown",
+      manejarEscape
+    );
+
+    return () => {
+      document.body.style.overflow =
+        overflowAnterior;
+
+      window.removeEventListener(
+        "keydown",
+        manejarEscape
+      );
+    };
+  }, [modalLogoutAbierto, cerrandoSesion]);
 
   // =====================================================
   // RENDERIZADO
@@ -348,9 +399,7 @@ export default function MainLayout() {
 
         <div className="flex h-full items-center justify-between gap-4 px-4 sm:px-5 lg:px-6">
 
-          {/* =====================================
-              LOGOTIPO Y NAVEGACIÓN
-          ===================================== */}
+          {/* LOGOTIPO Y NAVEGACIÓN */}
 
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
 
@@ -377,7 +426,7 @@ export default function MainLayout() {
               )}
             </button>
 
-            {/* IDENTIDAD ORIGINAL DE INVENET */}
+            {/* IDENTIDAD DE INVENET */}
 
             <div className="flex shrink-0 items-center gap-3">
 
@@ -441,7 +490,9 @@ export default function MainLayout() {
 
             {puedeVerNotificaciones && (
               <div className="flex items-center justify-center">
-                <NotificacionesCampana key={user?.id} />
+                <NotificacionesCampana
+                  key={user?.id}
+                />
               </div>
             )}
 
@@ -475,11 +526,11 @@ export default function MainLayout() {
 
             </div>
 
-            {/* CERRAR SESIÓN */}
+            {/* BOTÓN CERRAR SESIÓN */}
 
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={solicitarLogout}
               disabled={cerrandoSesion}
               title={
                 cerrandoSesion
@@ -528,9 +579,7 @@ export default function MainLayout() {
         }`}
       >
 
-        {/* =====================================
-            ENCABEZADO DEL MENÚ
-        ===================================== */}
+        {/* ENCABEZADO DEL MENÚ */}
 
         <div
           className={`flex shrink-0 items-center border-b border-slate-100 py-5 ${
@@ -556,7 +605,7 @@ export default function MainLayout() {
 
           </div>
 
-          {/* CONTRAER / EXPANDIR EN ESCRITORIO */}
+          {/* CONTRAER / EXPANDIR MENÚ */}
 
           <button
             type="button"
@@ -643,7 +692,7 @@ export default function MainLayout() {
                       {item.nombre}
                     </span>
 
-                    {/* INDICADOR DE SECCIÓN ACTIVA */}
+                    {/* INDICADOR ACTIVO */}
 
                     {isActive && (
                       <span
@@ -664,6 +713,93 @@ export default function MainLayout() {
         </nav>
 
       </aside>
+
+      {/* =============================================
+          MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN
+      ============================================= */}
+
+      {modalLogoutAbierto && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 py-6 backdrop-blur-[2px]"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget
+            ) {
+              cancelarLogout();
+            }
+          }}
+        >
+
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-modal-logout"
+            aria-describedby="descripcion-modal-logout"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-7"
+          >
+
+            {/* ICONO */}
+
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+              <CircleHelp size={25} />
+            </div>
+
+            {/* TÍTULO */}
+
+            <h2
+              id="titulo-modal-logout"
+              className="text-xl font-bold text-slate-900"
+            >
+              ¿Querés cerrar sesión?
+            </h2>
+
+            {/* DESCRIPCIÓN */}
+
+            <p
+              id="descripcion-modal-logout"
+              className="mt-2 text-sm leading-6 text-slate-600"
+            >
+              Vas a salir de Invenet. Para volver a
+              ingresar, deberás iniciar sesión
+              nuevamente.
+            </p>
+
+            {/* BOTONES */}
+
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+              {/* CANCELAR */}
+
+              <button
+                type="button"
+                onClick={cancelarLogout}
+                disabled={cerrandoSesion}
+                className="inline-flex min-h-11 justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+
+              {/* CONFIRMAR */}
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={cerrandoSesion}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <LogOut size={17} />
+
+                {cerrandoSesion
+                  ? "Cerrando sesión..."
+                  : "Sí, cerrar sesión"}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
       {/* =============================================
           MENSAJE DE ERROR AL CERRAR SESIÓN
