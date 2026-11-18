@@ -96,7 +96,7 @@ export default function ActivosTable({
 
               {/* CÓDIGO DE INVENTARIO */}
 
-              <td className="px-5 py-4">
+              <td className="px-5 py-4 flex flex-col">
                 <Link
                   to={`/activos/${activo.id}`}
                   title={`Ver detalle de ${activo.codigo_inventario}`}
@@ -111,6 +111,9 @@ export default function ActivosTable({
                     className="shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
                   />
                 </Link>
+                <span className="mt-1 text-xs text-slate-400">
+                    ID# {activo.id}
+                  </span>
               </td>
 
               {/* CATEGORÍA */}

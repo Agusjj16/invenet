@@ -1016,7 +1016,7 @@ export default function Usuarios() {
                     {/* USUARIO */}
 
                     <td className="whitespace-nowrap px-5 py-4 align-middle">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col">
 
                         <div className="min-w-0">
                           <Link
@@ -1027,6 +1027,9 @@ export default function Usuarios() {
                             {nombreCompleto(usuario)}
                           </Link>
                         </div>
+                        <span className="mt-1 text-xs text-slate-400">
+                          ID#{usuario.id}
+                        </span>
                       </div>
                     </td>
 
