@@ -160,7 +160,6 @@ function RolBadge({ nombre }) {
 function EstadoUsuarioBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
-      <CheckCircle2 size={13} />
       Activo
     </span>
   );

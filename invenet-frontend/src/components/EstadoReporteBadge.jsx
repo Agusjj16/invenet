@@ -5,12 +5,12 @@ export default function EstadoReporteBadge({ estado }) {
       punto: "bg-amber-500",
     },
     "En revisión": {
-      clases: "border-blue-200 bg-blue-50 text-blue-700",
-      punto: "bg-blue-500",
+      clases: "border-yellow-200 bg-yellow-50 text-yellow-700",
+      punto: "bg-yellow-500",
     },
     "Derivado a reparación": {
-      clases: "border-violet-200 bg-violet-50 text-violet-700",
-      punto: "bg-violet-500",
+      clases: "border-red-200 bg-red-50 text-red-700",
+      punto: "bg-red-500",
     },
     Cerrado: {
       clases: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -27,7 +27,7 @@ export default function EstadoReporteBadge({ estado }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold ${estilo.clases}`}
+      className={`inline-flex gap-2 items-center rounded-lg border px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${estilo.clases}`}
     >
       <span
         className={`h-1.5 w-1.5 shrink-0 rounded-full ${estilo.punto}`}

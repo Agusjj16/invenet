@@ -15,6 +15,7 @@ use App\Models\OrdenReparacion;
 use App\Models\EstadoReporte;
 use App\Models\EstadoOrden;
 use App\Http\Requests\StoreActivosLoteRequest;
+use App\Services\HistorialActivoFormatter;
 
 class ActivoController extends Controller
 {
@@ -552,8 +553,10 @@ class ActivoController extends Controller
         return response()->json($activos);
     }
 
-    public function historial(int $id)
-    {
+    public function historial(
+        int $id,
+        HistorialActivoFormatter $formatter
+    ) {
         $activo = Activo::withTrashed()->findOrFail($id);
 
         $historial = $activo->historial()
@@ -562,7 +565,9 @@ class ActivoController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return response()->json($historial);
+        return response()->json(
+            $formatter->formatearColeccion($historial)
+        );
     }
 
     public function showDadoDeBaja(int $id)

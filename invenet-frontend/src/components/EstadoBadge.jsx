@@ -1,9 +1,9 @@
 export default function EstadoBadge({ estado }) {
   const estilos = {
-    Operativo: "bg-green-100 text-green-700",
-    "Con anomalía": "bg-red-100 text-red-700",
-    "En reparación": "bg-yellow-100 text-yellow-700",
-    "Dado de baja": "bg-red-100 text-red-700",
+    Operativo: "border-green-200 bg-green-50 text-green-700",
+    "Con anomalía": "border-red-200 bg-red-50 text-red-700",
+    "En reparación": "border-yellow-200 bg-yellow-50 text-yellow-700",
+    "Dado de baja": "border-red-200 bg-red-50 text-red-700",
   };
 
   const estilo =
@@ -11,7 +11,7 @@ export default function EstadoBadge({ estado }) {
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${estilo}`}
+      className={`inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-semibold whitespace-nowrap ${estilo}`}
     >
       {estado ?? "Sin estado"}
     </span>

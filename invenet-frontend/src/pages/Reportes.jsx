@@ -87,9 +87,9 @@ function EstadoReporteBadge({ estado }) {
     Pendiente:
       "border-amber-200 bg-amber-50 text-amber-800",
     "En revisión":
-      "border-blue-200 bg-blue-50 text-blue-700",
+      "border-yellow-200 bg-yellow-50 text-yellow-700",
     "Derivado a reparación":
-      "border-violet-200 bg-violet-50 text-violet-700",
+      "border-red-200 bg-red-50 text-red-700",
     Cerrado:
       "border-emerald-200 bg-emerald-50 text-emerald-700",
   };

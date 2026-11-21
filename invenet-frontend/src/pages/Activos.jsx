@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Link,
@@ -17,6 +16,7 @@ import {
   RefreshCw,
   Search,
   X,
+  Printer,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
@@ -26,6 +26,8 @@ import {
   obtenerActivos,
   darDeBajaActivo,
 } from "../services/activoService";
+
+import { imprimirInventario } from "../utils/imprimirInventario";
 
 import ActivosTable from "../components/ActivosTable";
 
@@ -96,6 +98,8 @@ export default function Activos() {
 
   const [procesandoBaja, setProcesandoBaja] =
     useState(false);
+
+  const [imprimiendo, setImprimiendo] = useState(false);
 
   // =====================================================
   // REFERENCIAS
@@ -296,6 +300,84 @@ export default function Activos() {
       setProcesandoBaja(false);
     }
   };
+
+
+  // =====================================================
+  // IMPRESIÓN DEL INVENTARIO
+  // =====================================================
+
+  const handleImprimirInventario = async () => {
+    if (!esAdministrador || imprimiendo) return;
+
+    // Abrir la ventana durante el clic para evitar
+    // bloqueos del navegador tras las peticiones async.
+    const ventana = window.open("", "_blank");
+
+    if (!ventana) {
+      toast.error(
+        "El navegador bloqueó la ventana de impresión."
+      );
+      return;
+    }
+
+    ventana.document.write(
+      "<!DOCTYPE html><html><head><title>Preparando informe</title></head>" +
+      "<body><p>Preparando informe de inventario...</p></body></html>"
+    );
+    ventana.document.close();
+
+    setImprimiendo(true);
+
+    try {
+      const todosLosActivos = [];
+      let paginaConsulta = 1;
+      let ultimaPaginaConsulta = 1;
+
+      do {
+        const respuesta = await obtenerActivos({
+          page: paginaConsulta,
+          por_pagina: 100,
+        });
+
+        todosLosActivos.push(...(respuesta.data ?? []));
+
+        ultimaPaginaConsulta = Number(
+          respuesta.last_page ?? 1
+        );
+
+        paginaConsulta++;
+      } while (paginaConsulta <= ultimaPaginaConsulta);
+
+      if (todosLosActivos.length === 0) {
+        ventana.close();
+        toast.error("No hay activos para imprimir.");
+        return;
+      }
+
+      const nombreAdministrador = [
+        user?.nombre,
+        user?.apellido,
+      ].filter(Boolean).join(" ") || "Administrador";
+
+      imprimirInventario(
+        ventana,
+        todosLosActivos,
+        nombreAdministrador
+      );
+
+    } catch (err) {
+      console.error("Error al imprimir inventario:", err);
+
+      ventana.close();
+
+      toast.error(
+        "No se pudo preparar el informe de inventario."
+      );
+    } finally {
+      setImprimiendo(false);
+    }
+  };
+
 
   // =====================================================
   // BÚSQUEDA EN LA PÁGINA ACTUAL
@@ -547,6 +629,27 @@ export default function Activos() {
               <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
                 Página {paginaActual} de {ultimaPagina}
               </span>
+
+              {/* IMPRIMIR INVENTARIO */}
+
+              {esAdministrador && (
+                <button
+                  type="button"
+                  onClick={handleImprimirInventario}
+                  disabled={cargando || imprimiendo || !!error || totalRegistros === 0}
+                  title="Imprimir listado completo de activos"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Printer
+                    size={17}
+                    className={imprimiendo ? "animate-pulse" : ""}
+                  />
+
+                  {imprimiendo
+                    ? "Preparando informe..."
+                    : "Imprimir listado"}
+                </button>
+              )}
 
               
             </div>

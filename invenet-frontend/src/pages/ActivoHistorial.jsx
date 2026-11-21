@@ -227,7 +227,9 @@ function EventoHistorial({ evento, ultimo = false }) {
     punto,
   } = configuracion;
 
-  const cambios = obtenerCambios(evento);
+  const cambios = Array.isArray(evento.cambios_legibles)
+  ? evento.cambios_legibles
+  : obtenerCambios(evento);
 
   const nombreUsuario = evento.usuario
     ? [evento.usuario.nombre, evento.usuario.apellido]

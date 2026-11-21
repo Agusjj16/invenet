@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -437,7 +436,7 @@ export default function OrdenesReparacion() {
 
             <div className="flex flex-wrap items-center gap-3 xl:justify-end">
 
-                            {/* BÚSQUEDA */}
+              {/* BÚSQUEDA */}
 
               <div className="relative w-full sm:w-60">
 
